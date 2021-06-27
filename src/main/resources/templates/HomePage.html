@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>HomePage</title>
+    <script type="text/javascript" src="../JS/jquery-3.3.1.min.js"></script>
+    <link href="/CSS/style.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="/JS/global.js"></script>
+    <link rel="stylesheet" type="text/css" href="../CSS/style-3f6c75e2ee.css" media="all">
+    <link rel="stylesheet" type="text/css" href="../CSS/mobile-6047800248.css" media="screen and (max-width:800px)">
+    <link rel="stylesheet" type="text/css" href="../CSS/pc-ff2c0eaac6.css" media="screen and (min-width:800px)">
+
+    <style>
+        #code{
+            font-family:Arial;
+            font-style:italic;
+            font-weight:bold;
+            border:0;
+            letter-spacing:2px;
+            color:blue;
+        }
+    </style>
+    <script>
+
+    </script>
+</head>
+<body>
+<!-- content wrapper start -->
+<div class="wrapper">
+    <div class="nav-bar">
+        <div class="nav-panel">
+            <div class="inner-nav-panel">
+                <div class="logo">
+                    <a href="/toHomePage">
+                        <img src="/images/logo.png">
+                    </a>
+                </div>
+
+                <div class="buttons">
+                    <div style="padding: 0;width: 200px;float: left;">
+                        <img style="width: 200px;height: 40px;" src="/images/logo2.png">
+                    </div>
+                    <th:block th:if = "${session.userInfo != null}">
+                        <a th:href="@{/user/logout(username=${session.userInfo.username})}" class="buttons-active">退出登陆</a>
+                        <a href="/user/toPersonalCenter" class="buttons-active">个人中心</a>
+                        <th:block th:if = "${session.userInfo.identity != '0'}">
+                            <a href="/toBackManage" class="buttons-active">后台管理</a>
+                        </th:block>
+                        <a href="/toHelpDocument" class="buttons-active">帮助文档</a>
+                        <a href="/toManageProject" class="buttons-active">项目管理</a>
+                        <a href="/toHomePage" class="buttons-active">首页</a>
+                    </th:block>
+
+                    <th:block th:if = "${session.userInfo == null}">
+                        <a href="/toHomePage" class="buttons-active">首页</a>
+                        <a href="/user/toRegister" class="buttons-active">现在注册</a>
+                        <a href="/user/toLogin" class="buttons-active">登陆</a>
+                    </th:block>
+                </div>
+                <div class="c"></div>
+            </div>
+        </div>
+    </div>
+    <!-- main start -->
+    <div class="top index-top tilt-component">
+        <div class="top-content">
+            <div class="top-content-slogan">
+                <div class="main-content-1">轻量级缺陷管理工具</div>
+                <div class="main-content-1-sub">实践项目过程模拟，追踪项目进度，跟踪缺陷生命周期，量化团队表现，助力项目高质量开发</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="ie8">
+        <div class="index-content">
+            <div class="index-content1 normal-width">
+                <div class="title">自反馈瀑布模型开发的最佳实践</div>
+                <div class="subtitle">自反馈瀑布模型开发采用项目顺序模拟方法控制风险，实现过程严格线性依赖，阶段过程严格迭代，并通过沟通激发团队成员动力。Line.微缺陷管理为你提供优秀的自反馈瀑布开发实践。</div>
+                <div class="content"><div class="index-content-image index-content-image-1"><img src="../images/index/scrumX2-a01b2b8001.png" width="504" height="349" data-src2x="images/index/scrumX2-a01b2b8001.png"></div>
+                    <ul class="list">
+                        <li>
+                            <div class="list-img"></div>
+                            <div class="list-content"><b>为需求安排迭代</b><br>将需求分配到对应的迭代，支持多迭代并行开发。</div>
+                        </li>
+                        <li>
+                            <div class="list-img"></div>
+                            <div class="list-content"><b>检验迭代进度</b><br>提供树形状态图，帮助团队检验进度。</div>
+                        </li>
+                        <li>
+                            <div class="list-img"></div><div class="list-content"><b>支持个人/团队开发过程</b><br>模拟工具兼容个人软件开发过程以及团队软件开发过程，实现灵活开发。</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+            <div class="index-content2 normal-width">
+                <div class="title">深度整合缺陷生命周期管理，实现流程管理自动化</div>
+                <div class="subtitle">缺陷生命周期管理 以缺陷紧密依赖瀑布模型为基础，实现缺陷循环修复及管理，自动对任务工期进行完结，提高工程质量、缩短版本周期。Line.微缺陷管理 深度整合 缺陷生命周期管理，帮助团队轻松实践项目缺陷跟踪管理。</div>
+                <div class="content"><div class="index-content-image index-content-image-2"><img src="../images/index/devopsX2-9e66dfe89c.png" width="461" height="318" data-src2x="images/index/devopsX2-9e66dfe89c.png"></div>
+                    <ul class="list">
+                        <li>
+                            <div class="list-img"></div>
+                            <div class="list-content"><b>模块关联</b><br>缺陷产生点将紧密捆绑项目模型中的模块，实现缺陷有迹可循。</div>
+                        </li>
+                        <li>
+                            <div class="list-img"></div>
+                            <div class="list-content"><b>持续跟踪</b><br>通过模拟缺陷生命周期过程，持续跟踪缺陷修复。</div>
+                        </li>
+                        <li>
+                            <div class="list-img"></div>
+                            <div class="list-content"><b>持续交付</b><br>支持项目成员间循环交付缺陷管理任务，直至缺陷彻底修复。</div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- main end -->
+    <div class="c"></div>
+    <!-- footer start -->
+    <div class="footer-company-msg index-pc">
+        <div class="normal-width">
+            <div class="footer-company-left">
+                <div class="footer-copyright" th:text = "${session.DMSInfo.copyright}"></div>
+                <div class="footer-contact">
+                    <div class="footer-contact-single-msg">
+                        <img src="../images/icon_email_greyX2-762aeb3848.png" width="18" height="14" data-src2x="../images/icon_email_greyX2-762aeb3848.png">
+                        <div class="footer-contact-single-msg-content">kevinmeanscool@163.com</div>
+                    </div><!--<div class="footer-contact-single-msg">--><!--<img src="images/icon_wechat_grey-a29c44bfac.png" width="20" height="20">--><!--<div class="footer-contact-single-msg-content">--><!--公众号: 万事ONES--><!--</div>--><!--</div>-->
+                </div>
+            </div>
+            <div class="footer-company-right">
+                <img src="../images/footer_logo_greyX2-f3fc0a7f32.png" width="25" height="29" class="footer-company-right-img" data-src2x="../images/footer_logo_greyX2-f3fc0a7f32.png">
+                <div class="footer-company-right-line"></div>
+                <div class="footer-company-right-language">中文(简体)</div>
+            </div>
+        </div>
+    </div>
+    <!-- footer end -->
+</div>
+<!-- content wrapper end -->
+
+</body>
+</html>

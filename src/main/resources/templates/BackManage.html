@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>后台管理</title>
+    <script type="text/javascript" src="../JS/jquery-1.7.2.min.js"></script>
+    <script type="text/javascript" charset="utf-8" src="/JS/jquerysession.js"></script>
+    <link href="/CSS/style.css?version=5.9.0" rel="stylesheet" type="text/css">
+    <!--样式文件-->
+    <link rel="stylesheet" type="text/css" href="/JS/media/css/jquery.dataTables.min.css">
+    <!--jquery js-->
+    <script src="/JS/media/js/jquery.js"></script>
+    <!--DataTables 核心 js-->
+    <script src="/JS/media/js/jquery.dataTables.min.js"></script>
+    <script>
+
+        $(document).ready(function () {
+            //Chinese
+            $('#Table1').DataTable({
+                language: {
+                    url:"/TXT/zh_CN.txt"
+                }
+            });
+            $('#Table2').DataTable({
+                language: {
+                    url:"/TXT/zh_CN.txt"
+                }
+            });
+        });
+
+        function setting1Show() {
+            document.getElementById("setting1").style.display="";
+            document.getElementById("setting2").style.display="none";
+            document.getElementById("setting3").style.display="none";
+        }
+
+        function setting2Show() {
+            document.getElementById("setting1").style.display="none";
+            document.getElementById("setting2").style.display="";
+            document.getElementById("setting3").style.display="none";
+        }
+
+        function setting3Show() {
+            document.getElementById("setting1").style.display="none";
+            document.getElementById("setting2").style.display="none";
+            document.getElementById("setting3").style.display="";
+        }
+
+        function toEditArticle() {
+            window.location.href = "/article/toEditArticle";
+        }
+        
+        function deleteArticle(articleId) {
+            var r=confirm("确定删除？");
+            if (r==true)
+            {
+                $.ajax({
+                    type:'post',
+                    url:"/article/deleteArticle",
+                    dataType:'json',
+                    data:{articleId:articleId},
+                    dataType:'text',
+                    timeout:1000,
+
+                    error:function () {
+                        alert("ajax异常");
+                    },
+                    success:function (result) {
+                        if(result == "ok"){
+                            var table1 = $("#Table1").DataTable();
+                            var rows = table1.rows().data();
+                            var size = table1.page.info().recordsTotal;
+                            //查找对应记录的索引
+                            for(var i= 0;i<size;i++){
+                                if(articleId == rows[i][0]){
+                                    table1.rows(i).remove().draw(false);//前端删除
+                                    break;
+                                }
+                            }
+                        }
+                        else {
+                            alert("服务器异常");
+                        }
+                    }
+                });
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        function changeIdentity(id,operation) {
+            $.ajax({
+                type:'post',
+                url:"/user/changeIdentity",
+                dataType:'json',
+                data:{userId:id,operation:operation},
+                dataType:'text',
+                timeout:1000,
+
+                error:function () {
+                    alert("ajax异常");
+                },
+                success:function (result) {
+                    if(result == "true"){
+                        if(operation == "up"){
+                            DownBtnShow(id);
+                        }
+                        else if(operation == "down"){
+                            UpBtnShow(id);
+                        }
+                        alert("操作成功");
+                    }
+                    else {
+                        alert("服务器异常");
+                    }
+                }
+            });
+        }
+
+        function UpBtnShow(id) {
+            $("#down"+id).attr("hidden",true);
+            $("#up"+id).attr("hidden",false);
+
+            var table2 = $("#Table2").DataTable();
+            var rows = table2.rows().data();
+            var size = table2.page.info().recordsTotal;
+            //查找对应记录的索引
+            for(var i= 0;i<size;i++){
+                if(id == rows[i][0]){
+                    table2.cell(i,5).data("0");//前端修改
+                    break;
+                }
+            }
+
+        }
+
+        function DownBtnShow(id) {
+            $("#up"+id).attr("hidden",true);
+            $("#down"+id).attr("hidden",false);
+
+            var table2 = $("#Table2").DataTable();
+            var rows = table2.rows().data();
+            var size = table2.page.info().recordsTotal;
+            //查找对应记录的索引
+            for(var i= 0;i<size;i++){
+                if(id == rows[i][0]){
+                    table2.cell(i,5).data("1");//前端修改
+                    break;
+                }
+            }
+        }
+
+        function saveSetting() {
+            var DMS = new Object();
+            DMS.id = $.trim($("#dmsID").text());
+            DMS.systemname = $.trim($("#systemname").val());
+            DMS.copyright = $.trim($("#copyright").val());
+            DMS.status = $.trim($('input:radio:checked').val());
+            $.ajax({
+                type:'post',
+                url:"/DMSInfo/updateBasicInfoOfSystem",
+                dataType:'json',
+                data:{ObjectDMS:JSON.stringify(DMS)},
+                dataType:'text',
+                timeout:1000,
+
+                error:function () {
+                    alert("保存失败！");
+                },
+                success:function (result) {
+                    if(result!=""&&result=="success"){
+                        $('#message').html("保存成功");
+                    }
+                    else if(result == "fail"){
+                        alert("保存失败，请重试！");
+                    }
+                }
+            });
+        }
+    </script>
+</head>
+<body>
+<!-- content wrapper start -->
+<div class="wrapper">
+    <div class="nav-bar">
+        <div class="nav-panel">
+            <div class="inner-nav-panel">
+                <div class="logo">
+                    <a href="/toHomePage">
+                        <img src="/images/logo.png">
+                    </a>
+                </div>
+
+                <div class="buttons">
+                    <div style="padding: 0;width: 200px;float: left;">
+                        <img style="width: 200px;height: 40px;" src="/images/logo2.png">
+                    </div>
+                    <th:block th:if = "${session.userInfo != null}">
+                        <a th:href="@{/user/logout(username=${session.userInfo.username})}" class="buttons-active">退出登陆</a>
+                        <a href="/user/toPersonalCenter" class="buttons-active">个人中心</a>
+                        <th:block th:if = "${session.userInfo.identity != '0'}">
+                            <a href="/toBackManage" class="buttons-active">后台管理</a>
+                        </th:block>
+                        <a href="/toHelpDocument" class="buttons-active">帮助文档</a>
+                        <a href="/toManageProject" class="buttons-active">项目管理</a>
+                        <a href="/toHomePage" class="buttons-active">首页</a>
+                    </th:block>
+
+                    <th:block th:if = "${session.userInfo == null}">
+                        <a href="/toHomePage" class="buttons-active">首页</a>
+                        <a href="/user/toRegister" class="buttons-active">现在注册</a>
+                        <a href="/user/toLogin" class="buttons-active">登陆</a>
+                        <a href="/DMSInfo/toSystemSetting" class="buttons-active">系统设置</a>
+                    </th:block>
+                </div>
+                <div class="c"></div>
+            </div>
+        </div>
+    </div>
+    <!-- main start -->
+    <div class="main-content"></div>
+    <div class="main" id="main">
+        <!-- main-content start -->
+        <div class="main-content" style="width:940px;">
+            <div id="settings" class="tab-container" style="display: block; width: 100%; margin: 0px;">
+                <ul class="resp-tabs-list">
+                    <li class="resp-tab-item" onclick="setting1Show()">帮助文档管理</li>
+                    <th:block th:if = "${session.userInfo.identity == '2'}">
+                        <li class="resp-tab-item" onclick="setting2Show()">用户管理</li>
+                        <li class="resp-tab-item" onclick="setting3Show()">系统设置</li>
+                    </th:block>
+                </ul>
+                <div class="resp-tabs-container main-box" style="width:960px;">
+                    <div style="padding: 15px 0;">
+                        <div id="setting1">
+                            <div>
+                                <input type="button" class="textbtn" value="新建文档" onclick="toEditArticle()">
+                            </div>
+                            <div class="main-box home-box-list" style="width: 960px">
+                                <table id="Table1" class="display">
+                                    <thead>
+                                    <tr>
+                                        <th>序列号</th>
+                                        <th>文档标题</th>
+                                        <th>发布时间</th>
+                                        <th>操作者ID</th>
+                                        <th>操作</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr th:each="a:${articleList}">
+                                        <td th:text = "${a.id}"></td>
+                                        <td th:text = "${a.title}"></td>
+                                        <td th:text = "${a.publishtime}"></td>
+                                        <td th:text = "${a.operatorid}"></td>
+                                        <td><a th:href="@{/article/getArticle(articleId=${a.id})}" target="_Blank">查看文档</a>&nbsp;<a th:href="@{/article/toUpdateArticle(articleId=${a.id})}" target="_Blank">修改文档</a>&nbsp;<a href="#" th:onclick="'javascript:deleteArticle(\''+${a.id}+'\')'">删除文档</a></td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <th:block th:if = "${session.userInfo.identity == '2'}">
+                            <div id="setting2" style="display: none">
+                                <div class="main-box home-box-list" style="width: 960px">
+                                    <table id="Table2" class="display">
+                                        <thead>
+                                        <tr>
+                                            <th>序列号</th>
+                                            <th>用户名</th>
+                                            <th>密码</th>
+                                            <th>绑定邮箱</th>
+                                            <th>性别</th>
+                                            <th>身份</th>
+                                            <th>昵称</th>
+                                            <th>操作</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr th:each="u:${userList}">
+                                            <td th:text = "${u.id}"></td>
+                                            <td th:text = "${u.username}"></td>
+                                            <td th:text = "${u.password}"></td>
+                                            <td th:text = "${u.email}"></td>
+                                            <td th:text = "${u.gender}"></td>
+                                            <td th:text = "${u.identity}"></td>
+                                            <td th:text = "${u.nickname}"></td>
+                                            <td>
+                                                <th:block th:if = "${u.identity} == 0">
+                                                    <a th:id="up+${u.id}" href="#" th:onclick="'javascript:changeIdentity('+${u.id}+',\'up\')'">赋予管理员权限</a>
+                                                    <a th:id="down+${u.id}" href="#" hidden="hidden" th:onclick="'javascript:changeIdentity('+${u.id}+',\'down\')'">解除管理员权限</a>
+                                                </th:block>
+                                                <th:block th:if = "${u.identity} == 1">
+                                                    <a th:id="up+${u.id}" href="#" hidden="hidden" th:onclick="'javascript:changeIdentity('+${u.id}+',\'up\')'">赋予管理员权限</a>
+                                                    <a th:id="down+${u.id}" href="#" th:onclick="'javascript:changeIdentity('+${u.id}+',\'down\')'">解除管理员权限</a>
+                                                </th:block>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div id="setting3" style="display: none">
+                                <form id="Setting" action="/DMSInfo/updateBasicInfoOfSystem" method="post">
+                                    <table cellpadding="5" cellspacing="8" border="0" width="100%" class="fs14">
+                                        <tbody>
+                                        <tr>
+                                            <td width="180" align="right">系统ID</td>
+                                            <td width="auto" align="left"><a id="dmsID" th:text = ${session.DMSInfo.id}></a></td>
+                                        </tr>
+                                        <tr>
+                                            <td width="180" align="right">系统名称</td>
+                                            <td width="auto" align="left"><input id="systemname" type="text" th:value = ${session.DMSInfo.systemname}></td>
+                                        </tr>
+                                        <tr>
+                                            <td width="180" align="right">创建时间</td>
+                                            <td width="auto" align="left" th:text = ${session.DMSInfo.foundingtime}></td>
+                                        </tr>
+
+                                        <tr>
+                                            <td width="180" align="right">系统状态</td>
+                                            <th:block th:if = "${session.DMSInfo.status == 0}">
+                                                <td width="auto" align="left"><input name="status" type="radio" value="0" checked="checked">运行<input name="status" type="radio" value="1">维护</td>
+                                            </th:block>
+                                            <th:block th:if = "${session.DMSInfo.status == 1}">
+                                                <td width="auto" align="left"><input name="status" type="radio" value="0">运行<input name="status" type="radio" value="1" checked="checked">维护</td>
+                                            </th:block>
+                                        </tr>
+
+
+                                        <tr>
+                                            <td width="180" align="right">版权声明</td>
+                                            <td width="auto" align="left"><textarea id="copyright" class="w300 h160" th:text = ${session.DMSInfo.copyright}></textarea></td>
+                                        </tr>
+                                        </tbody>
+                                        <tbody><tr>
+                                            <td width="180" align="right"></td>
+                                            <td width="auto" align="left"><input type="button" value="保存设置" class="textbtn" onclick="saveSetting()"></td>
+                                        </tr>
+                                        <tr>
+                                            <td width="180" align="right"></td>
+                                            <td width="auto" align="left"><span id="message" style="color: red"></span></td>
+                                        </tr>
+                                        </tbody></table>
+                                </form>
+                            </div>
+                        </th:block>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- main-content end -->
+        
+        <div class="c"></div>
+        <a style="left: 842px; display: none;" rel="nofollow" href="#top" id="go-to-top">▲</a>
+
+    </div>
+    <!-- main end -->
+    <div class="c"></div>
+    <!-- footer start -->
+    <div class="copyright">
+        <p>
+
+        </p>
+    </div>
+    <!-- footer end -->
+</div>
+<!-- content wrapper end -->
+</body>
+</html>

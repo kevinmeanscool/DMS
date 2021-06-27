@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Details</title>
+    <script type="text/javascript" src="../JS/jquery-3.3.1.min.js"></script>
+    <link href="/CSS/style.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="/JS/global.js"></script>
+    <script type="text/javascript" src="/JS/date.format.js"></script>
+    <!--样式文件-->
+    <link rel="stylesheet" type="text/css" href="/JS/media/css/jquery.dataTables.min.css">
+    <!--jquery js-->
+    <script src="/JS/media/js/jquery.js"></script>
+    <!--DataTables 核心 js-->
+    <script src="/JS/media/js/jquery.dataTables.min.js"></script>
+    <script>
+        //后台服务
+        function updatePro() {
+            //获取必要信息
+            var missionModuleJson = $("#missionModule").text();
+            var missionModule = JSON.parse(missionModuleJson);
+            var missionModuleId = missionModule.id;
+
+            //获取更新所需的信息
+            var formData = new FormData();
+            formData.append('id',$("#project_id_edit").text());
+            formData.append('projectName',$.trim($("#project_name_edit").val()));
+            formData.append('environment',$("#project_environment_edit").val());
+            formData.append('pattern',$("#project_pattern_edit").val());
+
+
+            //更新
+            $.ajax({
+                type:'post',
+                url:"/mission/updateProject",
+                dataType:'json',
+                data:formData,
+                dataType:'text',
+                processData:false,
+                contentType:false,
+
+                error:function () {
+                    alert("失败！");
+                },
+                success:function (result) {
+                    if(result=='ok'){
+                        window.location.replace("/mission/viewDetails?moduleId="+missionModuleId+"&type=0");
+                    }
+                    else {
+                        alert("系统异常:"+result);
+                    }
+                }
+            });
+        }
+        function updateReq() {
+            //获取必要信息
+            var missionModuleJson = $("#missionModule").text();
+            var missionModule = JSON.parse(missionModuleJson);
+            var missionModuleId = missionModule.id;
+
+            //获取更新所需的信息
+            var formData = new FormData();
+            formData.append('id',$("#req_id_edit").text());
+            formData.append('reqName',$.trim($("#req_name_edit").val()));
+            formData.append('businessReq',$("#req_businessReq_edit").val());
+            formData.append('userReq',$("#req_userReq_edit").val());
+            formData.append('functionalReq',$("#req_functionalReq_edit").val());
+            formData.append('nonFunctionalReq',$("#req_nonFunctionalReq_edit").val());
+
+            //更新
+            $.ajax({
+                type:'post',
+                url:"/mission/updateReq",
+                dataType:'json',
+                data:formData,
+                dataType:'text',
+                processData:false,
+                contentType:false,
+
+                error:function () {
+                    alert("失败！");
+                },
+                success:function (result) {
+                    if(result=='ok'){
+                        window.location.replace("/mission/viewDetails?moduleId="+missionModuleId+"&type=1");
+                    }
+                    else {
+                        alert("系统异常:"+result);
+                    }
+                }
+            });
+        }
+        function updateTolDesign() {
+            //获取必要信息
+            var missionModuleJson = $("#missionModule").text();
+            var missionModule = JSON.parse(missionModuleJson);
+            var missionModuleId = missionModule.id;
+
+            //获取更新所需的信息
+            var formData = new FormData();
+            formData.append('id',$("#tolDesign_id_edit").text());
+            formData.append('tolName',$.trim($("#tolDesign_name_edit").val()));
+            formData.append('processLogic',$("#tolDesign_processLogic_edit").val());
+
+            var softwareStructure = $("#tolDesigns_softwareStructure_edit_uploadImg")[0].files[0];
+
+            //不更新图片
+            if(softwareStructure === undefined){
+                $.ajax({
+                    type:'post',
+                    url:"/mission/updateTolDesign_noImg",
+                    dataType:'json',
+                    data:formData,
+                    dataType:'text',
+                    processData:false,
+                    contentType:false,
+
+                    error:function () {
+                        alert("失败！");
+                    },
+                    success:function (result) {
+                        if(result=='ok'){
+                            window.location.replace("/mission/viewDetails?moduleId="+missionModuleId+"&type=2");
+                        }
+                        else {
+                            alert("系统异常:"+result);
+                        }
+                    }
+                });
+            }
+            //更新图片
+            else {
+                //封装图片
+                formData.append('softwareStructure',softwareStructure);
+                $.ajax({
+                    type:'post',
+                    url:"/mission/updateTolDesign",
+                    dataType:'json',
+                    data:formData,
+                    dataType:'text',
+                    processData:false,
+                    contentType:false,
+
+                    error:function () {
+                        alert("失败！");
+                    },
+                    success:function (result) {
+                        if(result=='ok'){
+                            window.location.replace("/mission/viewDetails?moduleId="+missionModuleId+"&type=2");
+                        }
+                        else {
+                            alert("系统异常:"+result);
+                        }
+                    }
+                });
+            }
+        }
+        function updateDetDesign() {
+            //获取必要信息
+            var missionModuleJson = $("#missionModule").text();
+            var missionModule = JSON.parse(missionModuleJson);
+            var missionModuleId = missionModule.id;
+
+            //获取更新所需的信息
+            var formData = new FormData();
+            formData.append('id',$("#detDesign_id_edit").text());
+            formData.append('detName',$.trim($("#detDesign_name_edit").val()));
+            formData.append('arithmetic',$("#detDesign_arithmetic_edit").val());
+            formData.append('limitingCondition',$("#detDesign_limitingCondition_edit").val());
+            formData.append('input',$("#detDesign_input_edit").val());
+            formData.append('output',$("#detDesign_output_edit").val());
+
+            var processLogic = $("#detDesign_processLogic_edit_uploadImg")[0].files[0];
+
+            //不更新图片
+            if(processLogic === undefined){
+                $.ajax({
+                    type:'post',
+                    url:"/mission/updateDelDesign_noImg",
+                    dataType:'json',
+                    data:formData,
+                    dataType:'text',
+                    processData:false,
+                    contentType:false,
+
+                    error:function () {
+                        alert("失败！");
+                    },
+                    success:function (result) {
+                        if(result=='ok'){
+                            window.location.replace("/mission/viewDetails?moduleId="+missionModuleId+"&type=3");
+                        }
+                        else {
+                            alert("系统异常:"+result);
+                        }
+                    }
+                });
+            }
+            //更新图片
+            else {
+                //图片封装
+                formData.append('processLogic',processLogic);
+
+                $.ajax({
+                    type:'post',
+                    url:"/mission/updateDelDesign",
+                    dataType:'json',
+                    data:formData,
+                    dataType:'text',
+                    processData:false,
+                    contentType:false,
+
+                    error:function () {
+                        alert("失败！");
+                    },
+                    success:function (result) {
+                        if(result=='ok'){
+                            window.location.replace("/mission/viewDetails?moduleId="+missionModuleId+"&type=3");
+                        }
+                        else {
+                            alert("系统异常:"+result);
+                        }
+                    }
+                });
+            }
+
+        }
+        function updateDefect() {
+            //获取必要信息
+            var missionModuleJson = $("#missionModule").text();
+            var missionModule = JSON.parse(missionModuleJson);
+            var missionModuleId = missionModule.id;
+
+            //获取更新所需的信息
+            var formData = new FormData();
+            formData.append('id',$("#defect_id_edit").text());
+            formData.append('title',$.trim($("#defect_title_edit").val()));
+            formData.append('defectDescription',$("#defect_defectDescription_edit").val());
+            formData.append('severity',$("#defect_severity_edit").val());
+
+            //更新
+            $.ajax({
+                type:'post',
+                url:"/mission/updateDefect",
+                dataType:'json',
+                data:formData,
+                dataType:'text',
+                processData:false,
+                contentType:false,
+
+                error:function () {
+                    alert("失败！");
+                },
+                success:function (result) {
+                    if(result=='ok'){
+                        window.location.replace("/mission/viewDetails?moduleId="+missionModuleId+"&type=4");
+                    }
+                    else {
+                        alert("系统异常:"+result);
+                    }
+                }
+            });
+        }
+
+        //前端响应
+        function divShowByType(type,info) {
+            switch (type){
+                case "0":
+                    fillProjectInfo(info);
+                    break;
+                case "1":
+                    fillRequirementInfo(info);
+                    break;
+                case "2":
+                    fillTotalDesignInfo(info);
+                    break;
+                case "3":
+                    fillDetailedDesignInfo(info);
+                    break;
+                case "4":
+                    fillDefectInfo(info);
+                    break;
+            }
+        }
+
+        function editShowByType() {
+            //获取类型
+            var type = $("#type").text();
+            //隐藏前按钮
+            $("#editBtn").hide();
+            $("#delBtn").hide();
+            //根据类型显示对应的编辑框
+            switch (type){
+                case "0":
+                    $("#projectInfoDiv").attr("hidden",true);
+                    $("#projectInfoDiv_Edit").attr("hidden",false);
+                    break;
+                case "1":
+                    $("#requirementInfoDiv").attr("hidden",true);
+                    $("#requirementInfoDiv_Edit").attr("hidden",false);
+                    break;
+                case "2":
+                    $("#TotalDesignInfoDiv").attr("hidden",true);
+                    $("#TotalDesignInfoDiv_Edit").attr("hidden",false);
+                    break;
+                case "3":
+                    $("#DetailedDesignInfoDiv").attr("hidden",true);
+                    $("#DetailedDesignInfoDiv_Edit").attr("hidden",false);
+                    break;
+                case "4":
+                    $("#DefectInfoDiv").attr("hidden",true);
+                    $("#DefectInfoDiv_Edit").attr("hidden",false);
+                    break;
+            }
+        }
+        
+        function fillProjectInfo(info) {
+            //div
+            $("#projectInfoDiv").attr("hidden",false);
+            //info
+            $("#project_id").text(info.id);
+            $("#project_name").text(info.projectname);
+            $("#project_category").text(info.category);
+            $("#project_environment").text(info.environment);
+            $("#project_pattern").text(info.pattern);
+            $("#project_accessRight").text(AccessRight(info.accessright));
+            $("#project_buildTime").text(TimeStampTransform(info.buildtime));
+            $("#project_statement").text(Statement(info.statement));
+            $("#project_operatorId").text(info.operatorid);
+
+            //edit
+            $("#project_id_edit").text(info.id);
+            $("#project_name_edit").val(info.projectname);
+            $("#project_category_edit").text(info.category);
+            $("#project_environment_edit").val(info.environment);
+            $("#project_pattern_edit").val(info.pattern);
+            $("#project_accessRight_edit").text(AccessRight(info.accessright));
+            $("#project_buildTime_edit").text(TimeStampTransform(info.buildtime));
+            $("#project_statement_edit").text(Statement(info.statement));
+            $("#project_operatorId_edit").text(info.operatorid);
+        }
+        function fillRequirementInfo(info) {
+            //div
+            $("#requirementInfoDiv").attr("hidden",false);
+            //info
+            $("#req_id").text(info.id)
+            $("#req_name").text(info.reqname);
+            $("#req_businessReq").text(info.businessreq);
+            $("#req_userReq").text(info.userreq);
+            $("#req_functionalReq").text(info.functionalreq);
+            $("#req_nonFunctionalReq").text(info.nonfunctionalreq);
+            $("#req_operatorId").text(info.operatorid);
+            $("#req_statement").text(Statement(info.statement));
+
+            //edit
+            $("#req_id_edit").text(info.id)
+            $("#req_name_edit").val(info.reqname);
+            $("#req_businessReq_edit").val(info.businessreq);
+            $("#req_userReq_edit").val(info.userreq);
+            $("#req_functionalReq_edit").val(info.functionalreq);
+            $("#req_nonFunctionalReq_edit").val(info.nonfunctionalreq);
+            $("#req_operatorId_edit").text(info.operatorid);
+            $("#req_statement_edit").text(Statement(info.statement));
+        }
+        function fillTotalDesignInfo(info) {
+            //div
+            $("#TotalDesignInfoDiv").attr("hidden",false);
+            //info
+            $("#tolDesign_id").text(info.id);
+            $("#tolDesign_name").text(info.tolname);
+            $("#tolDesign_processLogic").text(info.processlogic);
+            if(info.softwarestructure != ''){
+                $("#tolDesigns_softwareStructure").attr('src',info.softwarestructure);
+            }
+            else {
+                $("#tolDesigns_softwareStructure").attr('src',"/images/noPhoto.png");
+            }
+            $("#tolDesign_registerTime").text(TimeStampTransform(info.registertime));
+            $("#tolDesign_statement").text(Statement(info.statement));
+            $("#tolDesign_operatorId").text(info.operatorid);
+
+            //edit
+            $("#tolDesign_id_edit").text(info.id);
+            $("#tolDesign_name_edit").val(info.tolname);
+            $("#tolDesign_processLogic_edit").val(info.processlogic);
+            if(info.softwarestructure != ''){
+                $("#tolDesigns_softwareStructure_edit").attr('src',info.softwarestructure);
+            }
+            else {
+                $("#tolDesigns_softwareStructure_edit").attr('src',"/images/noPhoto.png");
+            }
+            $("#tolDesign_registerTime_edit").text(TimeStampTransform(info.registertime));
+            $("#tolDesign_statement_edit").text(Statement(info.statement));
+            $("#tolDesign_operatorId_edit").text(info.operatorid);
+        }
+        function fillDetailedDesignInfo(info) {
+            //div
+            $("#DetailedDesignInfoDiv").attr("hidden",false);
+            //info
+            $("#detDesign_id").text(info.id);
+            $("#detDesign_name").text(info.detname);
+            if(info.processlogic != ''){
+                $("#detDesign_processLogic").attr('src',info.processlogic);
+            }
+            else {
+                $("#detDesign_processLogic").attr('src',"/images/noPhoto.png");
+            }
+
+            $("#detDesign_arithmetic").text(info.arithmetic);
+            $("#detDesign_limitingCondition").text(info.limitingcondition);
+            $("#detDesign_input").text(info.input);
+            $("#detDesign_output").text(info.output);
+            $("#detDesign_registerTime").text(TimeStampTransform(info.registertime));
+            $("#detDesign_statement").text(Statement(info.statement));
+            $("#detDesign_operatorId").text(info.operatorid);
+
+            //edit
+            $("#detDesign_id_edit").text(info.id);
+            $("#detDesign_name_edit").val(info.detname);
+            if(info.processlogic != ''){
+                $("#detDesign_processLogic_edit").attr('src',info.processlogic);
+            }
+            else {
+                $("#detDesign_processLogic_edit").attr('src',"/images/noPhoto.png");
+            }
+
+            $("#detDesign_arithmetic_edit").val(info.arithmetic);
+            $("#detDesign_limitingCondition_edit").val(info.limitingcondition);
+            $("#detDesign_input_edit").val(info.input);
+            $("#detDesign_output_edit").val(info.output);
+            $("#detDesign_registerTime_edit").text(TimeStampTransform(info.registertime));
+            $("#detDesign_statement_edit").text(Statement(info.statement));
+            $("#detDesign_operatorId_edit").text(info.operatorid);
+        }
+        function fillDefectInfo(info) {
+            //div
+            $("#DefectInfoDiv").attr("hidden",false);
+            //info
+            $("#defect_id").text(info.id);
+            $("#defect_title").text(info.title);
+            $("#defect_defectDescription").text(info.defectdescription);
+            $("#defect_severity").text(info.severity);
+            $("#defect_submissionTime").text(TimeStampTransform(info.submissiontime));
+            $("#defect_solutionDescription").text(info.solutiondescription);
+            $("#defect_note").text(info.note);
+            $("#defect_operatorId").text(info.operatorid);
+
+            //edit
+            $("#defect_id_edit").text(info.id);
+            $("#defect_title_edit").val(info.title);
+            $("#defect_defectDescription_edit").val(info.defectdescription);
+            $("#defect_severity_edit").val(info.severity);
+            $("#defect_submissionTime_edit").text(TimeStampTransform(info.submissiontime));
+            $("#defect_solutionDescription_edit").text(info.solutiondescription);
+            $("#defect_note_edit").text(info.note);
+            $("#defect_operatorId_edit").text(info.operatorid);
+
+        }
+        function fillMissionInfo(missionInfo) {
+            $("#mission_status").text(MissionStat(missionInfo.missionstatus));
+            $("#mission_publishTime").text(TimeStampTransform(missionInfo.publishtime));
+            $("#mission_publisherId").text(missionInfo.publisherid);
+            $("#mission_receiverId").text(missionInfo.receiverid);
+        }
+
+        function del() {
+            var missionModuleJson = $("#missionModule").text();
+            var missionModule = JSON.parse(missionModuleJson);
+            var moduleId = missionModule.id;
+
+            if(confirm("确定要删除吗？（注意：删除模块将会删除该模块及其所有子模块，请谨慎操作！）"))
+
+            {
+                //进行删除操作
+                //异步判断
+                $.ajax({
+                    type:'post',
+                    url:"/mission/delTree",
+                    dataType:'json',
+                    data:{moduleId:moduleId},
+                    dataType:'text',
+                    timeout:1000,
+
+                    error:function () {
+                        alert("ajax异常")
+                    },
+                    success:function (result) {
+                        if(result == "true"){
+                            var proId = $("#proId").text();
+                            window.location.replace("/project/toMissionWindowAsPart?proId="+proId);
+                        }
+                    }
+                });
+
+            }
+
+            else
+
+            {
+
+                return false;
+
+            }
+        }
+        function edit() {
+            if(confirm("确定要开启编辑模式吗？"))
+
+            {
+
+                editShowByType();
+                return true;
+
+            }
+
+            else
+
+            {
+
+                return false;
+
+            }
+        }
+
+        function isFuncctional(missionModule) {
+            var moduleId = missionModule.id;
+            var category = missionModule.category;
+            //异步判断
+            $.ajax({
+                type:'post',
+                url:"/mission/isFunctional",
+                dataType:'json',
+                data:{moduleId:moduleId},
+                dataType:'text',
+                timeout:1000,
+
+                error:function () {
+                    alert("ajax异常")
+                },
+                success:function (result) {
+                    if(result == "true"){
+                        //开启button
+                        $("#editBtn").show();
+                        //项目模块不允许在详情页删除
+                        if(category != 0){
+                            $("#delBtn").show();
+                        }
+                    }
+                }
+            });
+        }
+
+        function PreviewImage_Det(imgFile) {
+            var filextension=imgFile.value.substring(imgFile.value.lastIndexOf("."),imgFile.value.length);
+            var f = document.getElementById("detDesign_processLogic_edit_uploadImg").files;
+            var filesize = ((f[0].size)/1024)/1024;
+            var filemaxsize = 1;//1M
+
+
+            filextension=filextension.toLowerCase();
+            if ((filextension!='.jpg')&&(filextension!='.gif')&&(filextension!='.jpeg')&&(filextension!='.png'))
+            {
+                document.getElementById("imgtip_det").innerHTML = "系统仅支持.jpg /.jpeg /.png /.gif类型的图片，请您调整格式后重新上传。";
+                imgFile.value = "";
+                $("#detDesign_processLogic_edit_view").empty();
+            }
+            else
+            {
+                if(filesize>filemaxsize){
+                    document.getElementById("imgtip_det").innerHTML = "图片大小不能大于1MB";
+                    imgFile.value = "";
+                    $("#detDesign_processLogic_edit_view").empty();
+                }
+                else {
+                    var path;
+                    if(document.all)//IE
+                    {
+                        imgFile.select();//要解决ie9 和 frame框架下的bug问题，需要找一个元素focus();
+                        path = document.selection.createRange().text;
+                        document.getElementById("detDesign_processLogic_edit_view").innerHTML="";
+                        document.getElementById("detDesign_processLogic_edit_view").style.filter = "progid:DXImageTransform.Microsoft.AlphaImageLoader(enabled='true',sizingMethod='scale',src=\"" + path + "\")";//使用滤镜效果
+                    }
+                    else//FF
+                    {
+                        path=window.URL.createObjectURL(imgFile.files[0]);// FF 7.0以上
+                        document.getElementById("detDesign_processLogic_edit_view").innerHTML = "<img id='detDesign_processLogic_edit_new' width='120px' height='100px' src='"+path+"'/>";
+                    }
+                    document.getElementById("imgtip_det").innerHTML = "支持小于1MB的 jpg / jpeg / png / gif图片";
+                }
+            }
+        }
+
+        function PreviewImage_Tol(imgFile) {
+            var filextension=imgFile.value.substring(imgFile.value.lastIndexOf("."),imgFile.value.length);
+            var f = document.getElementById("tolDesigns_softwareStructure_edit_uploadImg").files;
+            var filesize = ((f[0].size)/1024)/1024;
+            var filemaxsize = 1;//1M
+
+
+            filextension=filextension.toLowerCase();
+            if ((filextension!='.jpg')&&(filextension!='.gif')&&(filextension!='.jpeg')&&(filextension!='.png'))
+            {
+                document.getElementById("imgtip_tol").innerHTML = "系统仅支持.jpg /.jpeg /.png /.gif类型的图片，请您调整格式后重新上传。";
+                imgFile.value = "";
+                $("#tolDesigns_softwareStructure_edit_view").empty();
+            }
+            else
+            {
+                if(filesize>filemaxsize){
+                    document.getElementById("imgtip_tol").innerHTML = "图片大小不能大于1MB";
+                    imgFile.value = "";
+                    $("#tolDesigns_softwareStructure_edit_view").empty();
+                }
+                else {
+                    var path;
+                    if(document.all)//IE
+                    {
+                        imgFile.select();//要解决ie9 和 frame框架下的bug问题，需要找一个元素focus();
+                        path = document.selection.createRange().text;
+                        document.getElementById("tolDesigns_softwareStructure_edit_view").innerHTML="";
+                        document.getElementById("tolDesigns_softwareStructure_edit_view").style.filter = "progid:DXImageTransform.Microsoft.AlphaImageLoader(enabled='true',sizingMethod='scale',src=\"" + path + "\")";//使用滤镜效果
+                    }
+                    else//FF
+                    {
+                        path=window.URL.createObjectURL(imgFile.files[0]);// FF 7.0以上
+                        document.getElementById("tolDesigns_softwareStructure_edit_view").innerHTML = "<img id='tolDesigns_softwareStructure_edit_new' width='120px' height='100px' src='"+path+"'/>";
+                    }
+                    document.getElementById("imgtip_tol").innerHTML = "支持小于1MB的 jpg / jpeg / png / gif图片";
+                }
+            }
+        }
+
+        function TimeStampTransform(timestamp) {
+            return new Date(parseInt(timestamp.time)).toLocaleString().replace(/:\d{1,2}$/,' ');
+        }
+        
+        function MissionStat(stat) {
+
+            switch (stat){
+                case 0:
+                    return "未完成";
+                    break;
+                case 1:
+                    return "完成";
+                    break;
+                case 2:
+                    return "已编码";
+                    break;
+                case 3:
+                    return "待测试";
+                    break;
+                case 4:
+                    return "待修复";
+                    break;
+            }
+        }
+
+        function Statement(statement) {
+
+            switch (statement){
+                case 0:
+                    return "初始";
+                    break;
+                case 1:
+                    return "已编辑";
+                    break;
+                case 2:
+                    return "已删除";
+                    break;
+                case 3:
+                    return "未发布";
+                    break;
+                case 4:
+                    return "已发布";
+                    break;
+            }
+        }
+
+        function AccessRight(accessright) {
+            switch (accessright){
+                case 0:
+                    return "私密";
+                    break;
+                case 1:
+                    return "公开";
+                    break;
+                case 2:
+                    return "保护";
+                    break;
+            }
+        }
+
+        window.onload = function() {
+            //判断展示的是何种类型的模块
+            var infoJson = $("#info").text();
+            var missionInfoJson = $("#missionInfo").text();
+            var missionModuleJson = $("#missionModule").text();
+            var info = JSON.parse(infoJson);
+            var missionInfo = JSON.parse(missionInfoJson);
+            var missionModule = JSON.parse(missionModuleJson);
+            var type = $("#type").text();
+            divShowByType(type,info);
+            fillMissionInfo(missionInfo);
+
+            //判断是否开启缺陷列表
+            if(type != 4){
+                $('#Table1').DataTable({
+                    language: {
+                        url:"/TXT/zh_CN.txt"
+                    }
+                });
+                var table1 = $("#Table1").DataTable();
+
+                $('#Table1 tbody').on( 'click', 'tr', function () {
+                    if ( $(this).hasClass('selected') ) {
+                        var data = table1.rows('.selected').data();
+
+                        $(this).removeClass('selected');
+
+                    }
+                    else {
+                        table1.$('tr.selected').removeClass('selected');
+                        $(this).addClass('selected');
+
+                    }
+                } );
+            }
+            else {
+                $("#defectList").attr("hidden",true);
+            }
+
+            //判断是否开始删除和编辑功能
+            isFuncctional(missionModule);
+
+        };
+        
+
+    </script>
+</head>
+<body>
+<!-- content wrapper start -->
+<div class="wrapper">
+    <!-- main start -->
+    <div class="main-content"></div>
+    <div class="main" id="main">
+        <!-- main-content start -->
+        <div class="main-content" style="width: 940px;">
+            <div class="resp-tabs-container main-box home-box-list" style="width: 940px;">
+                <div><h1>信息展示框</h1><input id="editBtn" type="button" class="textbtn" style="float: right;display: none" value="编辑模块" onclick="edit()"><br><input id="delBtn" hidden="hidden" type="button" style="float: right;display: none" class="textbtn" value="删除模块" onclick="del()"></div>
+                <div hidden="hidden" id="type" th:text = "${type}"></div>
+                <div hidden="hidden" id="info" th:text = "${info}"></div>
+                <div hidden="hidden" id="missionInfo" th:text = "${missionInfo}"></div>
+                <div hidden="hidden" id="missionModule" th:text = "${missionModule}"></div>
+                <div hidden="hidden" id="proId" th:text = "${proId}"></div>
+                <!--项目-->
+                <div hidden="hidden" id="projectInfoDiv">
+                    <table cellpadding="5" cellspacing="8" border="0" width="100%" class="fs14">
+                        <tbody>
+                        <tr>
+                            <td width="180" align="right">编号</td>
+                            <td width="auto" align="left" id="project_id"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">项目名称</td>
+                            <td width="auto" align="left" id="project_name"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">类型</td>
+                            <td width="auto" align="left" id="project_category"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">开发环境</td>
+                            <td width="auto" align="left" id="project_environment"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">开发模式</td>
+                            <td width="auto" align="left" id="project_pattern"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">访问权限</td>
+                            <td width="auto" align="left" id="project_accessRight"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">创建时间</td>
+                            <td width="auto" align="left" id="project_buildTime"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">声明</td>
+                            <td width="auto" align="left" id="project_statement"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">发布者ID</td>
+                            <td width="auto" align="left" id="project_operatorId"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div hidden="hidden" id="projectInfoDiv_Edit">
+                    <table cellpadding="5" cellspacing="8" border="0" width="100%" class="fs14">
+                        <tbody>
+                        <tr>
+                            <td width="180" align="right">编号</td>
+                            <td width="auto" align="left" id="project_id_edit"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">项目名称</td>
+                            <td width="auto" align="left"><input type="text" id="project_name_edit"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">类型</td>
+                            <td width="auto" align="left" id="project_category_edit"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">开发环境</td>
+                            <td width="auto" align="left"><input type="text" id="project_environment_edit"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">开发模式</td>
+                            <td width="auto" align="left"><input type="text" id="project_pattern_edit"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">访问权限</td>
+                            <td width="auto" align="left" id="project_accessRight_edit"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">创建时间</td>
+                            <td width="auto" align="left" id="project_buildTime_edit"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">声明</td>
+                            <td width="auto" align="left" id="project_statement_edit"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">发布者ID</td>
+                            <td width="auto" align="left" id="project_operatorId_edit"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right"></td>
+                            <td width="auto" align="left"><input class="textbtn float-right" type="button" onclick="updatePro()" value="保存编辑"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!--需求-->
+                <div hidden="hidden" id="requirementInfoDiv">
+                    <table cellpadding="5" cellspacing="8" border="0" width="100%" class="fs14">
+                        <tbody>
+                        <tr>
+                            <td width="180" align="right">编号</td>
+                            <td width="auto" align="left" id="req_id"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">需求名称</td>
+                            <td width="auto" align="left" id="req_name"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">业务需求</td>
+                            <td width="auto" align="left" id="req_businessReq"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">用户需求</td>
+                            <td width="auto" align="left" id="req_userReq"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">功能需求</td>
+                            <td width="auto" align="left" id="req_functionalReq"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">非功能性需求</td>
+                            <td width="auto" align="left" id="req_nonFunctionalReq"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">发布者ID</td>
+                            <td width="auto" align="left" id="req_operatorId"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">声明</td>
+                            <td width="auto" align="left" id="req_statement"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div hidden="hidden" id="requirementInfoDiv_Edit">
+                    <table cellpadding="5" cellspacing="8" border="0" width="100%" class="fs14">
+                        <tbody>
+                        <tr>
+                            <td width="180" align="right">编号</td>
+                            <td width="auto" align="left" id="req_id_edit"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">需求名称</td>
+                            <td width="auto" align="left"><input type="text" id="req_name_edit"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">业务需求</td>
+                            <td width="auto" align="left"><textarea class="w600 h160" id="req_businessReq_edit"></textarea></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">用户需求</td>
+                            <td width="auto" align="left"><textarea class="w600 h160" id="req_userReq_edit"></textarea></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">功能需求</td>
+                            <td width="auto" align="left"><textarea class="w600 h160" id="req_functionalReq_edit"></textarea></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">非功能性需求</td>
+                            <td width="auto" align="left"><textarea class="w600 h160" id="req_nonFunctionalReq_edit"></textarea></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">发布者ID</td>
+                            <td width="auto" align="left" id="req_operatorId_edit"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">声明</td>
+                            <td width="auto" align="left" id="req_statement_edit"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right"></td>
+                            <td width="auto" align="left"><input class="textbtn float-right" type="button" onclick="updateReq()" value="保存编辑"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!--总体设计-->
+                <div hidden="hidden" id="TotalDesignInfoDiv">
+                    <table cellpadding="5" cellspacing="8" border="0" width="100%" class="fs14">
+                        <tbody>
+                        <tr>
+                            <td width="180" align="right">编号</td>
+                            <td width="auto" align="left" id="tolDesign_id"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">总体设计名称</td>
+                            <td width="auto" align="left" id="tolDesign_name"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">功能描述</td>
+                            <td width="auto" align="left" id="tolDesign_processLogic"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">软件结构</td>
+                            <td width="auto" align="left"><img id="tolDesigns_softwareStructure" style="width: 300px"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">创建时间</td>
+                            <td width="auto" align="left" id="tolDesign_registerTime"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">声明</td>
+                            <td width="auto" align="left" id="tolDesign_statement"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">发布者ID</td>
+                            <td width="auto" align="left" id="tolDesign_operatorId"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div hidden="hidden" id="TotalDesignInfoDiv_Edit">
+                    <table cellpadding="5" cellspacing="8" border="0" width="100%" class="fs14">
+                        <tbody>
+                        <tr>
+                            <td width="180" align="right">编号</td>
+                            <td width="auto" align="left" id="tolDesign_id_edit"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">总体设计名称</td>
+                            <td width="auto" align="left"><input id="tolDesign_name_edit" type="text"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">功能描述</td>
+                            <td width="auto" align="left"><textarea class="w600 h160" id="tolDesign_processLogic_edit"></textarea></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">软件结构</td>
+                            <td width="auto" align="left">
+                                <img id="tolDesigns_softwareStructure_edit" style="width: 300px"><label style="color:red;">原图</label>
+                                <div id="tolDesigns_softwareStructure_edit_view" style='width:120px; height:100px;'><label style="color:red;">新图预览</label></div>
+                                <input id="tolDesigns_softwareStructure_edit_uploadImg" type="file" onchange="PreviewImage_Tol(this)"/><br>
+                                <span id="imgtip_tol" class="grey">支持小于1MB的 jpg / jpeg / png / gif图片</span><br>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">创建时间</td>
+                            <td width="auto" align="left" id="tolDesign_registerTime_edit"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">声明</td>
+                            <td width="auto" align="left" id="tolDesign_statement_edit"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">发布者ID</td>
+                            <td width="auto" align="left" id="tolDesign_operatorId_edit"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right"></td>
+                            <td width="auto" align="left"><input class="textbtn float-right" type="button" onclick="updateTolDesign()" value="保存编辑"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!--详细设计-->
+                <div hidden="hidden" id="DetailedDesignInfoDiv">
+                    <table cellpadding="5" cellspacing="8" border="0" width="100%" class="fs14">
+                        <tbody>
+                        <tr>
+                            <td width="180" align="right">编号</td>
+                            <td width="auto" align="left" id="detDesign_id"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">详细设计名称</td>
+                            <td width="auto" align="left" id="detDesign_name"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">流程逻辑</td>
+                            <td width="auto" align="left"><img id="detDesign_processLogic" style="width: 300px"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">算法</td>
+                            <td width="auto" align="left" id="detDesign_arithmetic"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">限制条件</td>
+                            <td width="auto" align="left" id="detDesign_limitingCondition"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">输入</td>
+                            <td width="auto" align="left" id="detDesign_input"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">输出</td>
+                            <td width="auto" align="left" id="detDesign_output"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">创建时间</td>
+                            <td width="auto" align="left" id="detDesign_registerTime"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">声明</td>
+                            <td width="auto" align="left" id="detDesign_statement"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">发布者ID</td>
+                            <td width="auto" align="left" id="detDesign_operatorId"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div hidden="hidden" id="DetailedDesignInfoDiv_Edit">
+                    <table cellpadding="5" cellspacing="8" border="0" width="100%" class="fs14">
+                        <tbody>
+                        <tr>
+                            <td width="180" align="right">编号</td>
+                            <td width="auto" align="left" id="detDesign_id_edit"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">详细设计名称</td>
+                            <td width="auto" align="left"><input id="detDesign_name_edit" type="text"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">流程逻辑</td>
+                            <td width="auto" align="left">
+                                <img id="detDesign_processLogic_edit" style="width: 300px"><label style="color:red;">原图</label>
+                                <div id="detDesign_processLogic_edit_view" style='width:120px; height:100px;'><label style="color:red;">新图预览</label></div>
+                                <input id="detDesign_processLogic_edit_uploadImg" type="file" onchange="PreviewImage_Det(this)"/><br>
+                                <span id="imgtip_det" class="grey">支持小于1MB的 jpg / jpeg / png / gif图片</span><br>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">算法</td>
+                            <td width="auto" align="left"><textarea class="w600 h160" id="detDesign_arithmetic_edit"></textarea></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">限制条件</td>
+                            <td width="auto" align="left"><textarea class="w600 h160" id="detDesign_limitingCondition_edit"></textarea></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">输入</td>
+                            <td width="auto" align="left"><textarea class="w600 h160" id="detDesign_input_edit"></textarea></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">输出</td>
+                            <td width="auto" align="left"><textarea class="w600 h160" id="detDesign_output_edit"></textarea></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">创建时间</td>
+                            <td width="auto" align="left" id="detDesign_registerTime_edit"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">声明</td>
+                            <td width="auto" align="left" id="detDesign_statement_edit"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">发布者ID</td>
+                            <td width="auto" align="left" id="detDesign_operatorId_edit"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right"></td>
+                            <td width="auto" align="left"><input class="textbtn float-right" type="button" onclick="updateDetDesign()" value="保存编辑"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!--缺陷-->
+                <div hidden="hidden" id="DefectInfoDiv">
+                    <table cellpadding="5" cellspacing="8" border="0" width="100%" class="fs14">
+                        <tbody>
+                        <tr>
+                            <td width="180" align="right">编号</td>
+                            <td width="auto" align="left" id="defect_id"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">标题</td>
+                            <td width="auto" align="left" id="defect_title"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">缺陷描述</td>
+                            <td width="auto" align="left" id="defect_defectDescription"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">严重性</td>
+                            <td width="auto" align="left" id="defect_severity"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">创建时间</td>
+                            <td width="auto" align="left" id="defect_submissionTime"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">解决方案描述</td>
+                            <td width="auto" align="left" id="defect_solutionDescription"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">笔记</td>
+                            <td width="auto" align="left" id="defect_note"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">发布者ID</td>
+                            <td width="auto" align="left" id="defect_operatorId"></td>
+                        </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+                <div hidden="hidden" id="DefectInfoDiv_Edit">
+                    <table cellpadding="5" cellspacing="8" border="0" width="100%" class="fs14">
+                        <tbody>
+                        <tr>
+                            <td width="180" align="right">编号</td>
+                            <td width="auto" align="left" id="defect_id_edit"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">标题</td>
+                            <td width="auto" align="left"><input type="text" id="defect_title_edit"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">缺陷描述</td>
+                            <td width="auto" align="left"><textarea class="w600 h160" id="defect_defectDescription_edit"></textarea></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">严重性</td>
+                            <td width="auto" align="left">
+                                <select id="defect_severity_edit">
+                                    <option value="0">细微</option>
+                                    <option value="1">一般</option>
+                                    <option value="2">严重</option>
+                                    <option value="3">致命</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">创建时间</td>
+                            <td width="auto" align="left" id="defect_submissionTime_edit"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">解决方案描述</td>
+                            <td width="auto" align="left"><textarea class="w600 h160" id="defect_solutionDescription_edit"></textarea></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">笔记</td>
+                            <td width="auto" align="left"><textarea class="w600 h160" id="defect_note_edit"></textarea></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">发布者ID</td>
+                            <td width="auto" align="left" id="defect_operatorId_edit"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right"></td>
+                            <td width="auto" align="left"><input class="textbtn float-right" type="button" onclick="updateDefect()" value="保存编辑"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="resp-tabs-container main-box home-box-list" style="width: 940px;">
+                <h1>任务信息</h1>
+                <table cellpadding="5" cellspacing="8" border="0" width="100%" class="fs14">
+                    <tbody>
+                    <tr>
+                        <td width="180" align="right">任务状态</td>
+                        <td width="auto" align="left" id="mission_status"></td>
+                    </tr>
+                    <tr>
+                        <td width="180" align="right">发布时间</td>
+                        <td width="auto" align="left" id="mission_publishTime"></td>
+                    </tr>
+                    <tr>
+                        <td width="180" align="right">任务发布者</td>
+                        <td width="auto" align="left" id="mission_publisherId"></td>
+                    </tr>
+                    <tr>
+                        <td width="180" align="right">任务接受者</td>
+                        <td width="auto" align="left" id="mission_receiverId"></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div id="defectList" class="resp-tabs-container main-box home-box-list" style="width: 940px;">
+                <h1>缺陷列表</h1>
+                <div class="main-box" style="width: 900px;">
+                    <th:block th:if = "${defectList_size} == 0 ">
+                        暂无缺陷。
+                    </th:block>
+                    <!--Table1 start-->
+                    <table id="Table1" class="display">
+                        <thead>
+                        <tr>
+                            <th>缺陷ID</th>
+                            <th>标题</th>
+                            <th>严重性</th>
+                            <th>发布时间</th>
+                            <th>操作</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr th:each="d,dStat:${defectList}">
+                            <td th:text = "${d.id}"></td>
+                            <td th:text = "${d.title}"></td>
+                            <td th:text = "${d.severity}"></td>
+                            <td th:text = "${d.submissiontime}"></td>
+                            <td><a th:href="@{/mission/viewDetails(moduleId = ${defectMissionModuleList[dStat.index].id},type=4)}" target="_blank">查看详情</a></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <!--Table1 end-->
+                </div>
+            </div>
+        </div>
+        <!-- main-content end -->
+        <div class="c"></div>
+        <a style="left: 930px; display: none;" rel="nofollow" href="#top" id="go-to-top">▲</a>
+    </div>
+    <!-- main end -->
+    <div class="c"></div>
+    
+</div>
+<!-- content wrapper end -->
+</body>
+</html>

@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Welcome | 注册</title>
+    <script type="text/javascript" src="/JS/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript" charset="utf-8" src="/JS/jquerysession.js"></script>
+    <link href="/CSS/style.css?version=5.9.0" rel="stylesheet" type="text/css">
+    <style>
+        ul{padding:0px;margin:0px;}
+        .login_autoComplete{width:256px;border:1px solid #4190db;position:absolute;background-color:#ffffff;z-index:99;top:109px;left:40px;display:none}
+        .login_auto_ul em{font-style:normal}
+        .login_auto_ul li.login_auto_title{font-weight:normal;line-height:30px;}
+        .login_auto_ul li{line-height:22px;text-indent:5px;font-family:"Arial";cursor:pointer;font-weight:bold;color:#333}
+        .login_auto_ul li.hover,.login_auto_ul li.curr{color:#ffffff;background-color:#6eb6fe}
+    </style>
+    <script>
+        function checkpassword() {
+            var pwd1 = document.getElementById("pwd1").value;
+            var pwd2 = document.getElementById("pwd2").value;
+            <!-- 对比两次输入的密码 -->
+            if(pwd1.trim() == pwd2.trim()&&pwd1.trim().length>=8) {
+                document.getElementById("tishi").innerHTML="<font color='green'>√</font>";
+                return true;
+            }
+            else {
+                document.getElementById("tishi").innerHTML="<font color='red'>×</font>";
+                return false;
+            }
+        }
+
+        function usernameminsize() {
+            var username = document.getElementById("uname").value;
+            if(username.trim().length<8){
+                document.getElementById("usernametip").innerHTML="<font color='red'>用户名至少8位</font>"
+                return false;
+            }
+            else {
+                document.getElementById("usernametip").innerHTML="<font color='green'>√</font>"
+                return true;
+            }
+        }
+
+        function pwdminsize() {
+            var pwd = document.getElementById("pwd1").value;
+            if(pwd.trim().length<8){
+                document.getElementById("pwdtip").innerHTML="<font color='red'>密码至少8位</font>"
+                return false;
+            }
+            else {
+                document.getElementById("pwdtip").innerHTML="<font color='green'>√</font>"
+                return true;
+            }
+        }
+
+        function emailcheck() {
+            var reg = new RegExp("^[a-z0-9]+([._\\-]*[a-z0-9])*@([a-z0-9]+[-a-z0-9]*[a-z0-9]+.){1,63}[a-z0-9]+$"); //正则表达式
+            var obj = document.getElementById("email"); //要验证的对象
+            if(!reg.test(obj.value)){ //正则验证不通过，格式不对
+                document.getElementById("emailtip").innerHTML="<font color='red'>错误的邮件格式</font>"
+                return false;
+            }else{
+                document.getElementById("emailtip").innerHTML="<font color='green'>√</font>"
+                return true;
+            }
+        }
+
+        function allPassValidatior(){
+            if(checkpassword()==true && usernameminsize()==true && pwdminsize()==true && emailcheck()==true){
+                document.getElementById("btnOK").disabled = false;
+                document.getElementById("btnOK").style.backgroundColor = "#42B983";
+                $('#codebtn').attr("disabled",false);
+            }
+            else {
+                document.getElementById("btnOK").disabled = true;
+                document.getElementById("btnOK").style.backgroundColor = "grey";
+                $('#codebtn').attr("disabled",true);
+            }
+        }
+
+        window.email_auto = function(selector){
+            var elt = $(selector);
+            var strHtml = '<div class="login_autoComplete" id="login_autoComplete">'+
+                '       <ul class="login_auto_ul">'+
+                '           <li class="login_auto_title">请选择邮箱后缀</li>'+
+                '           <li class="hover" hz="@qq.com"></li>'+
+                '           <li hz="@163.com"></li>'+
+                '           <li hz="@126.com"></li>'+
+                '           <li hz="@yahoo.com"></li>'+
+                '           <li hz="@sina.com"></li>'+
+                '           <li hz="@21cn.com"></li>'+
+                '       </ul>'+
+                '   </div>';
+            var lc = "#login_autoComplete";
+            var autoComplete,autoLi;
+            if($(lc).length==0){
+                $("body").append(strHtml);
+                $(lc).data("elt",elt);
+                autoComplete = $("#login_autoComplete");
+                autoLi = autoComplete.find("li:not(.login_auto_title)");
+                autoLi.mouseover(function(){
+                    $(this).siblings().filter(".hover").removeClass("hover");
+                    $(this).addClass("hover");
+                }).mouseout(function(){
+                    $(this).removeClass("hover");
+                }).mousedown(function(){
+                    $(lc).data("elt").val($(this).text()).change();
+                    $(this).parent().parent().hide();
+                });
+            }else{
+                $(lc).data("elt",elt);
+                autoComplete = $("#login_autoComplete");
+                autoLi = autoComplete.find("li:not(.login_auto_title)");
+            }
+            $(lc).css("width",elt.outerWidth()-1);
+            //用户名补全+翻动
+            elt.keyup(function(e){
+                if(/13|38|40|116/.test(e.keyCode) || this.value==''){
+                    return false;
+                }
+                var username = this.value;
+                if(username.indexOf("@")==-1){
+                    autoComplete.hide();
+                    return false;
+                }
+                autoLi.each(function(){
+                    this.innerHTML = username.replace(/\@+.*/,"")+$(this).attr("hz");
+                    if(this.innerHTML.indexOf(username)>=0){
+                        $(this).show();
+                    }else{
+                        $(this).hide();
+                    }
+                }).filter(".hover").removeClass("hover");
+                autoComplete.show().css({
+                    left : $(this).offset().left,
+                    top : $(this).offset().top + $(this).outerHeight(true) - 1
+                });
+                if(autoLi.filter(":visible").length==0){
+                    autoComplete.hide();
+                }else{
+                    autoLi.filter(":visible").eq(0).addClass("hover");
+                }
+            }).change(function(){
+                $("#login_autoComplete").hide();
+            }).keydown(function(e){
+                if(e.keyCode==38){ //上
+                    autoLi.filter(".hover").prev().not(".login_auto_title").addClass("hover").next().removeClass("hover");
+                }else if(e.keyCode==40){ //下
+                    autoLi.filter(".hover").next().addClass("hover").prev().removeClass("hover");
+                }else if(e.keyCode==13){ //Enter
+                    autoLi.filter(".hover").mousedown();
+                }
+            }).focus(function(){
+                $("#login_autoComplete").data("elt",$(this));
+            });
+        }
+
+        $(function(){
+            email_auto("#email");
+        });
+
+        function isVCodeConsistent() {
+            var vcode = $('#vcode').val();
+            if(vcode == $.session.get('vcode')){
+                return true;
+            }
+            else {
+                $('#message').html("验证码错误");
+                return false;
+            }
+        }
+
+    </script>
+</head>
+<body>
+<!-- content wrapper start -->
+<div class="wrapper">
+    <div class="nav-bar">
+        <div class="nav-panel">
+            <div class="inner-nav-panel">
+                <div class="logo">
+                    <a href="/toHomePage">
+                        <img src="/images/logo.png">
+                    </a>
+                </div>
+                <div class="buttons">
+                    <a href="/toHomePage" class="buttons-active">首页</a>
+                    <a href="/user/toRegister" class="buttons-active">现在注册</a>
+                </div>
+                <div class="c"></div>
+            </div>
+        </div>
+    </div>
+    <!-- main start -->
+    <div class="main-content"></div>
+    <div class="main" id="main">
+        <!-- main-content start -->
+        <div class="main-content">
+            <div class="title">
+                » 现在注册
+            </div>
+            <div class="main-box">
+                <form action="/user/register" method="post" onsubmit="return isVCodeConsistent();">
+                    <table cellpadding="5" cellspacing="8" border="0" width="100%" class="fs14">
+                        <tbody>
+                        <h1 style="color: red;font-size: small;margin-left: 150px">一个邮箱最多可以注册6个账号！</h1>
+                        <tr>
+                            <td width="180" align="right">用户名</td>
+                            <td width="auto" align="left"><input name="username" id="uname" type="text" maxlength="16" onkeyup="usernameminsize(),allPassValidatior(),value=value.replace(/[\W]/g,'')" placeholder="由8-16位数字字母构成" required="required">*<span id="usernametip"></span></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">密码</td>
+                            <td width="auto" align="left"><input name="password" id="pwd1" type="text" maxlength="15" onkeyup="pwdminsize(),allPassValidatior(),value=value.replace(/[\W]/g,'')" placeholder="由8-15位数字字母组成" required="required">*<span id="pwdtip"></span></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">确认密码</td>
+                            <td width="auto" align="left"><input id="pwd2" maxlength="15"onkeyup="checkpassword(),allPassValidatior(),value=value.replace(/[\W]/g,'')" type="password" placeholder="请再次输入密码" required="required">*<span id="tishi"></span></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">性别</td>
+                            <td width="auto" align="left"><input name="gender" type="radio" value="男" checked="checked">男<input name="gender" type="radio" value="女">女</td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">电子邮箱</td>
+                            <td width="auto" align="left"><input id="email" name="email" type="text" placeholder="请输入邮箱" onkeyup="emailcheck(),allPassValidatior()" required="required">*<span id="emailtip"></span>
+                                <div style="font-size: 12px;margin-left: 15px">此填写邮箱将成为密保邮箱</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">注册验证码</td>
+                            <td width="auto" align="left"><input id="vcode" type="text" placeholder="请填写验证码" required="required"><input id="codebtn" type="button" value="获取验证码" disabled="disabled">
+                                <div style="font-size: 12px;margin-left: 15px">此验证码将通过密保邮箱发送给您</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right"></td>
+                            <td width="auto" align="left"><input type="submit" value="现在注册" disabled="disabled" style="background-color: grey" id="btnOK" name="btnOk" class="textbtn"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right"></td>
+                            <td width="auto" align="left"><div th:text = "${message}"></div></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </form>
+            </div>
+        </div>
+        <!-- main-content end -->
+        <div class="main-sider">
+            <div>
+                <img style="width: 200px;height: 40px;margin-top: 200px;" src="/images/logo2.png">
+            </div>
+        </div>
+        <div class="c"></div>
+        <a style="left: 842px; display: none;" rel="nofollow" href="#top" id="go-to-top">▲</a>
+    </div>
+    <!-- main end -->
+    <div class="c"></div>
+    <!-- footer start -->
+    <div class="copyright">
+        <p>
+            
+        </p>
+    </div>
+    <!-- footer end -->
+</div>
+<!-- content wrapper end -->
+<script>
+    var countdown=60;
+    $('#codebtn').click(function() {
+        var securityCode = new Object();
+        securityCode.username = $.trim($("#uname").val());
+        securityCode.email = $.trim($("#email").val());
+        $.ajax({
+            type:'post',
+            url:"/SecurityCode/sendSecurityCodeToEmail",
+            dataType:'json',
+            data:{ObjectSecurityCode:JSON.stringify(securityCode)},
+            dataType:'text',
+            
+            success : function(result) {
+                if(result!=""&&result!="fail"&&result!="used"){//服务器业务正确
+                    $('#codebtn').attr("disabled",true);
+                    var vcode = result;
+                    alert("vcode:"+vcode);
+                    $('#message').html("");
+                    $.session.set('vcode',vcode);
+                    //刷新计时器
+                    countdown = 60;
+                    setTime();
+                }
+                else if(result == "fail"){
+                    alert("数据传输失败，请重试！");
+                }
+                else if(result == "used"){
+                    $('#message').html("邮箱已被使用，请尝试其他邮箱或找回密码");
+                }
+            },
+            error : function() {
+                alert("操作失败！");
+            }
+        });
+    });
+
+    $('#uname').change(function () {
+        $('#message').html("");
+    });
+
+    function setTime() {
+        if(countdown!=0){
+            $('#codebtn').attr("value",(countdown--)+"秒后可重新发送") ;
+        }
+        else {
+            $('#codebtn').attr("value","获取验证码") ;
+            $('#codebtn').attr("disabled",false) ;
+        }
+        setTimeout(function () {
+            setTime();
+        },1000)
+    }
+</script>
+</body>
+</html>

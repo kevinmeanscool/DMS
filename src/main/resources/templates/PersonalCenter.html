@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>个人资料</title>
+    <script type="text/javascript" src="../JS/jquery-1.7.2.min.js"></script>
+    <script type="text/javascript" charset="utf-8" src="/JS/jquerysession.js"></script>
+    <link href="/CSS/style.css?version=5.9.0" rel="stylesheet" type="text/css">
+    <script>
+        function PreviewImage(imgFile)
+        {
+            $("#imgbtn").attr("disabled",true);
+//            $("#imgbtn").style.backgroundColor = "grey";
+            $("#imgbtn").css("background-color","grey");
+            var filextension=imgFile.value.substring(imgFile.value.lastIndexOf("."),imgFile.value.length);
+            var f = document.getElementById("uploadImg").files;
+            var filesize = ((f[0].size)/1024)/1024;
+            var filemaxsize = 1;//1M
+
+
+            filextension=filextension.toLowerCase();
+            if ((filextension!='.jpg')&&(filextension!='.gif')&&(filextension!='.jpeg')&&(filextension!='.png'))
+            {
+                document.getElementById("imgtip").innerHTML = "系统仅支持.jpg /.jpeg /.png /.gif类型的图片，请您调整格式后重新上传。";
+                imgFile.value = "";
+                $("#imgPreview").empty();
+            }
+            else
+            {
+                if(filesize>filemaxsize){
+                    document.getElementById("imgtip").innerHTML = "图片大小不能大于1MB";
+                    imgFile.value = "";
+                    $("#imgPreview").empty();
+                }
+                else {
+                    var path;
+                    if(document.all)//IE
+                    {
+                        imgFile.select();//要解决ie9 和 frame框架下的bug问题，需要找一个元素focus();
+                        path = document.selection.createRange().text;
+                        document.getElementById("imgPreview").innerHTML="";
+                        document.getElementById("imgPreview").style.filter = "progid:DXImageTransform.Microsoft.AlphaImageLoader(enabled='true',sizingMethod='scale',src=\"" + path + "\")";//使用滤镜效果
+                    }
+                    else//FF
+                    {
+                        path=window.URL.createObjectURL(imgFile.files[0]);// FF 7.0以上
+                        document.getElementById("imgPreview").innerHTML = "<img id='img1' width='120px' height='100px' src='"+path+"'/>";
+                    }
+                    document.getElementById("imgtip").innerHTML = "支持小于1MB的 jpg / jpeg / png / gif图片";
+                    $("#imgbtn").attr("disabled",false);
+//                    $("#imgbtn").style.backgroundColor = "#5CACEE";
+                    $("#imgbtn").css("background-color","#5CACEE");
+                }
+            }
+        }
+        function imgvalidator() {
+            var uploadImg = document.getElementById("uploadImg");
+            var imgtype = uploadImg.value.substring(uploadImg.value.lastIndexOf("."),uploadImg.value.length);
+            if(uploadImg.value == ""){
+                document.getElementById("imgtip").innerHTML = "请先选取文件";
+                return false;
+            }
+            else {
+                return true;
+            }
+        }
+
+        function uploadHeadImage() {
+            var type = "file";
+            var id = "uploadImg";
+            var formData = new FormData();
+            formData.append(type,$("#"+id)[0].files[0]);
+            $.ajax({
+                type:'post',
+                url:"/user/uploadHeadImage",
+                data:formData,
+                processData:false,
+                contentType:false,
+
+                error:function () {
+                    alert("error:保存失败！");
+                },
+                success:function (result) {
+                    $('#imgMessage').html(result);
+                    //前端响应
+                    var src = $("#imgHead")[0].src;
+                    $("#imgHead").attr("src",src+"?"+Math.random().toString());
+                    $("#imgHead_left").attr("src",src+"?"+Math.random().toString());
+
+                }
+            });
+        }
+
+        function updateUsrInfo() {
+            var user = new Object();
+            user.id = $("#userId").text();
+            user.nickname = $("#userNickname").val();
+            user.gender = $('input:radio:checked').val();
+            user.personprofile = $("#userPersonProfile").val();
+
+            $.ajax({
+                type:'post',
+                url:"/user/updateUserInfo",
+                dataType:'json',
+                data:{ObjectUser:JSON.stringify(user)},
+                dataType:'text',
+                timeout:1000,
+
+                error:function () {
+                    $('#userInfoMessage').html("ajax异常");
+                },
+                success:function (result) {
+                    $('#userInfoMessage').html(result);
+                }
+            });
+        }
+        function checkpassword() {
+            var pwd1 = document.getElementById("pwd1").value;
+            var pwd2 = document.getElementById("pwd2").value;
+            <!-- 对比两次输入的密码 -->
+            if(pwd1.trim() == pwd2.trim()&&pwd1.trim().length>=8) {
+                document.getElementById("tishi").innerHTML="<font color='green'>√</font>";
+                return true;
+            }
+            else {
+                document.getElementById("tishi").innerHTML="<font color='red'>×</font>";
+                return false;
+            }
+        }
+
+        function pwdminsize() {
+            var pwd = document.getElementById("pwd1").value;
+            if(pwd.trim().length<8){
+                document.getElementById("pwdtip").innerHTML="<font color='red'>密码至少8位</font>"
+                return false;
+            }
+            else {
+                document.getElementById("pwdtip").innerHTML="<font color='green'>√</font>"
+                return true;
+            }
+        }
+
+        function allPassValidatior(){
+            if(checkpassword()==true  && pwdminsize()==true ){
+                document.getElementById("pwdbtn").disabled = false;
+                document.getElementById("pwdbtn").style.backgroundColor = "#5CACEE";
+            }
+            else {
+                document.getElementById("pwdbtn").disabled = true;
+                document.getElementById("pwdbtn").style.backgroundColor = "grey";
+            }
+        }
+
+        function changePassword() {
+            var currentPassword = $("#currentpwd").val();
+            var newPassword = $("#pwd1").val();
+
+            $.ajax({
+                type:'post',
+                url:"/user/changePassword",
+                dataType:'text',
+                data:{currentPassword:currentPassword,newPassword:newPassword},
+                timeout:1000,
+
+                error:function () {
+                    $('#passwordMessage').html("ajax异常");
+                },
+                success:function (result) {
+                    $('#passwordMessage').html(result);
+                }
+            });
+        }
+        function setting1Show() {
+            document.getElementById("setting1").style.display="";
+            document.getElementById("setting2").style.display="none";
+            document.getElementById("setting3").style.display="none";
+        }
+
+        function setting2Show() {
+            document.getElementById("setting1").style.display="none";
+            document.getElementById("setting2").style.display="";
+            document.getElementById("setting3").style.display="none";
+        }
+
+        function setting3Show() {
+            document.getElementById("setting1").style.display="none";
+            document.getElementById("setting2").style.display="none";
+            document.getElementById("setting3").style.display="";
+        }
+        window.onload=function(){
+
+        }
+    </script>
+</head>
+<body>
+<!-- content wrapper start -->
+<div class="wrapper">
+    <div class="nav-bar">
+        <div class="nav-panel">
+            <div class="inner-nav-panel">
+                <div class="logo">
+                    <a href="/toHomePage">
+                        <img src="/images/logo.png">
+                    </a>
+                </div>
+
+                <div class="buttons">
+                    <div style="padding: 0;width: 200px;float: left;">
+                        <img style="width: 200px;height: 40px;" src="/images/logo2.png">
+                    </div>
+                    <th:block th:if = "${session.userInfo != null}">
+                        <a th:href="@{/user/logout(username=${session.userInfo.username})}" class="buttons-active">退出登陆</a>
+                        <a href="/user/toPersonalCenter" class="buttons-active">个人中心</a>
+                        <th:block th:if = "${session.userInfo.identity != '0'}">
+                            <a href="/toBackManage" class="buttons-active">后台管理</a>
+                        </th:block>
+                        <a href="/toHelpDocument" class="buttons-active">帮助文档</a>
+                        <a href="/toManageProject" class="buttons-active">项目管理</a>
+                        <a href="/toHomePage" class="buttons-active">首页</a>
+                    </th:block>
+
+                    <th:block th:if = "${session.userInfo == null}">
+                        <a href="/toHomePage" class="buttons-active">首页</a>
+                        <a href="/user/toRegister" class="buttons-active">现在注册</a>
+                        <a href="/user/toLogin" class="buttons-active">登陆</a>
+                        <a href="/DMSInfo/toSystemSetting" class="buttons-active">系统设置</a>
+                    </th:block>
+                </div>
+                <div class="c"></div>
+            </div>
+        </div>
+    </div>
+    <!-- main start -->
+    <div class="main-content"></div>
+    <div class="main" id="main">
+        <!-- main-content start -->
+        <div class="main-content">
+            <div id="settings" class="tab-container" style="display: block; width: 100%; margin: 0px;">
+                <ul class="resp-tabs-list">
+                    <li class="resp-tab-item" onclick="setting1Show()">头像设置</li>
+                    <li class="resp-tab-item" onclick="setting2Show()">资料设置</li>
+                    <li class="resp-tab-item" onclick="setting3Show()">安全设置</li>
+                </ul>
+                <div class="resp-tabs-container main-box">
+                    <div style="padding: 15px 0;">
+                        <div id="setting1">
+                            <div class="float-left w300 img-center">
+                                <img id="imgHead_left" style="width: 300px" th:src="@{${session.userInfo.imageurl}}" th:alt="@{${session.userInfo.imageurl}}"/>
+                            </div>
+                            <div class="float-right w300" style="margin-right:20px">
+                                <p class="black">
+                                    你可以在这里修改你的头像(可预览)						</p>
+                                <hr><br>
+                                <form action="/user/uploadHeadImage" enctype="multipart/form-data" method="post" onsubmit="return imgvalidator();">
+                                    <tr>
+                                        <td>
+                                            <input id="uploadImg" type="file" required="required" name="headImg" onchange="PreviewImage(this)"/>
+                                            <div id="imgPreview" style='width:120px; height:100px;'></div>
+                                            <span id="imgtip" class="grey">支持小于1MB的 jpg / jpeg / png / gif图片</span><br>
+                                        </td>
+                                        <td>
+                                            <br>
+                                            <input type="button" value="上传头像" id="imgbtn" class="textbtn" disabled="disabled" style="background-color: grey" onclick="uploadHeadImage()">
+                                        </td>
+                                        <td>
+                                            <br><br>
+                                            <div id="imgMessage"></div>
+                                        </td>
+                                    </tr>
+                                </form>
+                            </div>
+                            <div class="c"></div>
+                        </div>
+
+                        <div id="setting2" style="display: none">
+                            <form action="/updateuserbasicinfoaction.action" method="post">
+                                <table cellpadding="5" cellspacing="8" border="0" width="100%" class="fs14">
+                                    <tbody>
+                                    <tr>
+                                        <td width="180" align="right">用户ID</td>
+                                        <td width="auto" align="left" th:text = "${session.userInfo.id}" id="userId"></td>
+                                    </tr>
+                                    <tr>
+                                        <td width="180" align="right">用户名</td>
+                                        <td width="auto" align="left" th:text = "${session.userInfo.username}"></td>
+                                    </tr>
+                                    <tr>
+                                        <td width="180" align="right">身份</td>
+                                        <td width="auto" align="left" th:text = "${session.userInfo.identity}"></td>
+                                    </tr>
+                                    <tr>
+                                        <td width="180" align="right">注册时间</td>
+                                        <td width="auto" align="left" th:text = "${session.userInfo.registertime}"></td>
+                                    </tr>
+                                    <tr>
+                                        <td width="180" align="right">电子邮箱</td>
+                                        <td width="auto" align="left">
+                                            <div th:text = "${session.userInfo.email}"></div><br>
+                                            不公开，仅供取回密码
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td width="180" align="right">昵称</td>
+                                        <td width="auto" align="left"><input type="text" required="required" th:value = "${session.userInfo.nickname}" id="userNickname"></td>
+                                    </tr>
+                                    <th:block th:if = "${session.userInfo.gender == '男'}">
+                                        <tr>
+                                            <td width="180" align="right">性别</td>
+                                            <td width="auto" align="left"><input name="bbsUser.gender" type="radio" value="男" checked="checked">男<input name="bbsUser.gender" type="radio" value="女">女</td>
+                                        </tr>
+                                    </th:block>
+                                    <th:block th:if = "${session.userInfo.gender == '女'}">
+                                        <tr>
+                                            <td width="180" align="right">性别</td>
+                                            <input name="bbsUser.gender" type="radio" value="男">男<input name="bbsUser.gender" type="radio" value="女" checked="checked">女</td>
+                                        </tr>
+                                    </th:block>
+
+                                    <tr>
+                                        <td width="180" align="right">个人简介</td>
+                                        <td width="auto" align="left"><textarea name="bbsUser.personalprofile" class="w300 h160" th:text = "${session.userInfo.personprofile}" id="userPersonProfile"></textarea></td>
+                                    </tr>
+                                    </tbody>
+                                    <tr>
+                                        <td width="180" align="right"></td>
+                                        <td width="auto" align="left"><input type="button" value="保存设置" class="textbtn" onclick="updateUsrInfo()"></td>
+                                    </tr>
+                                    <tr>
+                                        <td width="180" align="right"></td>
+                                        <td width="auto" align="left"><div id="userInfoMessage"></div></td>
+                                    </tr>
+                                </table>
+                            </form>
+                        </div>
+
+                        <div id="setting3" style="display: none">
+                            <form action="/updateusersecretinfoaction.action" method="post">
+                                <table cellpadding="5" cellspacing="8" border="0" width="100%" class="fs14">
+                                    <tbody>
+                                    <tr>
+                                        <td width="180" align="right">当前密码</td>
+                                        <td width="auto" align="left"><input name="currentpwd" id="currentpwd" type="text" required="required">*</td>
+                                    </tr>
+                                    <tr>
+                                        <td width="180" align="right">新密码</td>
+                                        <td width="auto" align="left"><input name="bbsUser.password" id="pwd1" type="text" maxlength="15" onkeyup="pwdminsize(),allPassValidatior(),value=value.replace(/[\W]/g,'')" placeholder="由8-15位数字字母组成" required="required">*<span id="pwdtip"></span></td>
+                                    </tr>
+                                    <tr>
+                                        <td width="180" align="right">再次输入新密码</td>
+                                        <td width="auto" align="left"><input id="pwd2" maxlength="15"onkeyup="checkpassword(),allPassValidatior(),value=value.replace(/[\W]/g,'')" type="password" placeholder="请再次输入密码" required="required">*<span id="tishi"></span></td>
+                                    </tr>
+                                    <tr>
+                                        <td width="180" align="right"></td>
+                                        <td width="auto" align="left"><input type="button" value="更改密码" id="pwdbtn" class="textbtn" onclick="changePassword()"></td>
+                                    </tr>
+                                    <tr>
+                                        <td width="180" align="right"></td>
+                                        <td width="auto" align="left"><div id="passwordMessage"></div></td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </form>
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- main-content end -->
+        <!-- main-sider start -->
+        <div class="main-sider">
+            <!--用户面板-->
+            <th:block th:if = "${session.userInfo != null}">
+                <div class="sider-box">
+                    <div class="sider-box-title">
+                        用户面板
+                        <span class="float-right"><a th:href="@{/user/logout(username=${session.userInfo.username})}">登出</a></span>
+                    </div>
+                    <div class="sider-box-content">
+                        <div class="user-pannel-avatar">
+                            <a href="">
+                                <img id="imgHead" th:src = "@{${session.userInfo.imageurl}}" th:alt = "@{${session.userInfo.imageurl}}">
+                            </a>
+                        </div>
+                        <div class="user-pannel">
+                            <div class="user-pannel-name">
+                                <a th:text = "${session.userInfo.nickname}" href=""></a>
+                            </div>
+                            <ul>
+                                <li>
+                                    <a href="">
+                                        <strong></strong>
+                                        <span>收藏的帖子</span>
+                                    </a>
+                                </li>
+
+                            </ul>
+                        </div>
+                        <div class="c"></div>
+                    </div>
+                </div>
+            </th:block>
+            <th:block th:if = "${session.userInfo == null}">
+                <div class="sider-box">
+                    <div class="sider-box-title"> 登 录 </div>
+                    <div class="sider-box-content">
+                        <div class="center-align" style="width:226px;">
+                            <form action="/user/login" method="post" onsubmit="return validate();">
+                                <p><label id="validationtip"></label></p>
+                                <p><label><input name="username"  type="text" required="required" class="w200" placeholder="用户名" onkeyup="value=value.replace(/[\W]/g,'')"></label></p>
+                                <p><label><input name="password" type="password" required="required" class="w200" placeholder="密码" onkeyup="value=value.replace(/[\W]/g,'')"></label></p>
+                                <p><label><input id = "validatorcode" type="password" required="required" style="width: 130px" placeholder="验证码"><input style="background: lightgray;color: white;margin-top: 5px;margin-left: 15px" type = "button" id="code" onclick="createCode()"/></label></p>
+                                <p><input type="submit" class="textbtn" name="submit" value="登 录" style="margin:0 78px;"></p>
+                                <p class="fs14 text-center">
+                                    <a href="/user/toRegister">现在注册</a>&nbsp;&nbsp;&nbsp;&nbsp;
+                                    <a href="/JSP/forgetpassword.jsp">忘记密码</a>
+                                </p>
+                            </form>
+                        </div>
+                        <p>
+                        </p>
+                    </div>
+                </div>
+            </th:block>
+
+        </div>
+        <!-- main-sider end -->
+        <div class="c"></div>
+        <a style="left: 842px; display: none;" rel="nofollow" href="#top" id="go-to-top">▲</a>
+
+    </div>
+    <!-- main end -->
+    <div class="c"></div>
+    <!-- footer start -->
+    <div class="copyright">
+        <p>
+
+        </p>
+    </div>
+    <!-- footer end -->
+</div>
+<!-- content wrapper end -->
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Build</title>
+    <meta charset="UTF-8">
+    <script type="text/javascript" src="../JS/jquery-3.3.1.min.js"></script>
+    <link href="/CSS/style.css?version=5.9.0" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="/JS/new.function.js"></script>
+    <script type="text/javascript" src="/JS/global.js"></script>
+</head>
+<body>
+<!-- content wrapper start -->
+<div class="wrapper">
+    <div class="nav-bar">
+        <div class="nav-panel">
+            <div class="inner-nav-panel">
+                <div class="logo">
+                    <a href="/toHomePage">
+                        <img src="/images/logo.png">
+                    </a>
+                </div>
+
+                <div class="buttons">
+                    <div style="padding: 0;width: 200px;float: left;">
+                        <img style="width: 200px;height: 40px;" src="/images/logo2.png">
+                    </div>
+                    <th:block th:if = "${session.userInfo != null}">
+                        <a th:href="@{/user/logout(username=${session.userInfo.username})}" class="buttons-active">退出登陆</a>
+                        <a href="/user/toPersonalCenter" class="buttons-active">个人中心</a>
+                        <th:block th:if = "${session.userInfo.identity != '0'}">
+                            <a href="/toBackManage" class="buttons-active">后台管理</a>
+                        </th:block>
+                        <a href="/toHelpDocument" class="buttons-active">帮助文档</a>
+                        <a href="/toManageProject" class="buttons-active">项目管理</a>
+                        <a href="/toHomePage" class="buttons-active">首页</a>
+                    </th:block>
+
+                    <th:block th:if = "${session.userInfo == null}">
+                        <a href="/toHomePage" class="buttons-active">首页</a>
+                        <a href="/user/toRegister" class="buttons-active">现在注册</a>
+                        <a href="/user/toLogin" class="buttons-active">登陆</a>
+                    </th:block>
+                </div>
+                <div class="c"></div>
+            </div>
+        </div>
+    </div>
+    <!-- main start -->
+    <div class="main-content"></div>
+    <div class="main" id="main">
+        <!-- main-content start -->
+        <div class="main-content">
+            <form action="/project/buildProject" method="post">
+                <div class="main-box">
+                    <div th:text = "${message}" style="color: red"></div>
+                    <p><input type="text" name="projectname" style="width:624px;" placeholder="项目名称" maxlength="20" required="required"></p>
+                </div>
+                <div class="main-box">
+                    <table cellpadding="5" cellspacing="8" border="0" width="100%" class="fs14">
+                        <tbody>
+                        <tr>
+                            <td width="180" align="right">项目类别</td>
+                            <td width="auto" align="left">
+                                <select name="category">
+                                    <option value="TSP">团队软件开发过程</option>
+                                </select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">开发环境</td>
+                            <td width="auto" align="left"><input type="text" name="environment" required="required"></td>
+                        </tr>
+                        <tr>
+                            <td width="180" align="right">开发模式</td>
+                            <td width="auto" align="left"><input type="text" name="pattern" required="required"></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="main-box" style="margin-top:20px;">
+
+                    <div class="text-center"><input type="submit" value="创建" class="textbtn" ></div>
+                </div>
+                <div class="c"></div>
+                <p></p>
+            </form>
+        </div>
+        <!-- main-content end -->
+        <!-- main-sider start -->
+        <div class="main-sider">
+            <!--右面板-->
+        </div>
+        <!-- main-sider end -->
+        <div class="c"></div>
+        <a style="left: 842px; display: none;" rel="nofollow" href="#top" id="go-to-top">▲</a>
+
+    </div>
+    <!-- main end -->
+    <div class="c"></div>
+    <!-- footer start -->
+    <div class="copyright">
+        <p>
+        </p>
+    </div>
+    <!-- footer end -->
+</div>
+<!-- content wrapper end -->
+</body>
+</html>

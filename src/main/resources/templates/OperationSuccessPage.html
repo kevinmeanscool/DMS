@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>操作成功，正在跳转首页···</title>
+    <script type="text/javascript" src="/JS/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript" charset="utf-8" src="/JS/jquerysession.js"></script>
+    <link href="/CSS/style.css?version=5.9.0" rel="stylesheet" type="text/css">
+
+
+</head>
+<body>
+<!-- content wrapper start -->
+<div class="wrapper">
+    <div class="nav-bar">
+        <div class="nav-panel">
+            <div class="inner-nav-panel">
+                <div class="logo">
+                    <a href="#">
+                        <img src="/image/forest_io.png">
+                    </a>
+                </div>
+                <div class="buttons">
+
+                </div>
+                <div class="c"></div>
+            </div>
+        </div>
+    </div>
+    <!-- main start -->
+    <div class="main-content"></div>
+    <div class="main" id="main">
+        <!-- main-content start -->
+        <div class="main-content">
+            <div class="title">
+                » SUCCESS!
+            </div>
+            <div class="main-box">
+                操作成功，<div id="timer" style="display: inline">3</div>s后自动跳转至登陆页面······
+                <script language=JavaScript>
+                    var countdown=3;
+                    setTime();
+                    window.setTimeout("window.location='/user/toLogin'",3000);
+                    function setTime() {
+                        if(countdown!=0){
+                            $('#timer').html(countdown--) ;
+                        }
+                        setTimeout(function () {
+                            setTime();
+                        },1000)
+                    }
+                </script>
+            </div>
+        </div>
+        <!-- main-content end -->
+        <div class="main-sider">
+            <div class="sider-box" style="margin-top: 39px">
+
+            </div>
+        </div>
+        <div class="c"></div>
+        <a style="left: 842px; display: none;" rel="nofollow" href="#top" id="go-to-top">▲</a>
+    </div>
+    <!-- main end -->
+    <div class="c"></div>
+    <!-- footer start -->
+    <div class="copyright">
+        <p>
+
+        </p>
+    </div>
+    <!-- footer end -->
+</div>
+<!-- content wrapper end -->
+
+</body>
+</html>

@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>Manage</title>
+    <script type="text/javascript" src="../JS/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript" charset="utf-8" src="/JS/jquerysession.js"></script>
+    <link href="/CSS/style.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="/JS/global.js"></script>
+    <!--样式文件-->
+    <link rel="stylesheet" type="text/css" href="/JS/media/css/jquery.dataTables.min.css">
+    <!--jquery js-->
+    <script src="/JS/media/js/jquery.js"></script>
+    <!--DataTables 核心 js-->
+    <script src="/JS/media/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#Table1').DataTable({
+                language: {
+                    url:"/TXT/zh_CN.txt"
+                }
+            });
+            $('#Table2').DataTable({
+                language: {
+                    url:"/TXT/zh_CN.txt"
+                }
+            });
+        });
+        
+        function toBuildProjectPage() {
+            window.location.href="/toBuildProjectPage";
+        }
+
+        function delPro(proId) {
+            var r=confirm("确定要删除该项目所有信息吗？（删除项目信息后无法恢复）")
+            if (r==true)
+            {
+                //进行删除操作
+                //异步判断
+                $.ajax({
+                    type:'post',
+                    url:"/project/delPro",
+                    dataType:'json',
+                    data:{proId:proId},
+                    dataType:'text',
+                    timeout:1000,
+
+                    error:function () {
+                        alert("ajax异常")
+                    },
+                    success:function (result) {
+                        if(result == 'true'){
+                            window.location.replace("/toManageProject");
+                        }
+                        else {
+                            alert("服务器异常");
+                        }
+                    }
+                });
+            }
+            else
+            {
+                return false;
+            }
+        }
+    </script>
+
+</head>
+<body>
+<!-- content wrapper start -->
+<div class="wrapper">
+    <div class="nav-bar">
+        <div class="nav-panel">
+            <div class="inner-nav-panel">
+                <div class="logo">
+                    <a href="/toHomePage">
+                        <img src="/images/logo.png">
+                    </a>
+                </div>
+
+                <div class="buttons">
+                    <div style="padding: 0;width: 200px;float: left;">
+                        <img style="width: 200px;height: 40px;" src="/images/logo2.png">
+                    </div>
+                    <th:block th:if = "${session.userInfo != null}">
+                        <a th:href="@{/user/logout(username=${session.userInfo.username})}" class="buttons-active">退出登陆</a>
+                        <a href="/user/toPersonalCenter" class="buttons-active">个人中心</a>
+                        <th:block th:if = "${session.userInfo.identity != '0'}">
+                            <a href="/toBackManage" class="buttons-active">后台管理</a>
+                        </th:block>
+                        <a href="/toHelpDocument" class="buttons-active">帮助文档</a>
+                        <a href="/toManageProject" class="buttons-active">项目管理</a>
+                        <a href="/toHomePage" class="buttons-active">首页</a>
+                    </th:block>
+
+                    <th:block th:if = "${session.userInfo == null}">
+                        <a href="/toHomePage" class="buttons-active">首页</a>
+                        <a href="/user/toRegister" class="buttons-active">现在注册</a>
+                        <a href="/user/toLogin" class="buttons-active">登陆</a>
+                        <a href="/DMSInfo/toSystemSetting" class="buttons-active">系统设置</a>
+                    </th:block>
+                </div>
+                <div class="c"></div>
+            </div>
+        </div>
+    </div>
+    <!-- main start -->
+    <div class="main-content"></div>
+    <div class="main" id="main">
+        <!-- main-content start -->
+        <div class="main-content">
+            <!--Table1 start-->
+            <div class="main-box" style="width: 960px">
+                <p>你创建的项目：</p>
+                <th:block th:if = "${projectListAsBuilder_size} == 0 ">
+                    你还没有创建过任何一个项目，点击右上角「创建项目」开始创建一个项目吧。
+                </th:block>
+                <!--<a href="/toBuildProjectPage" class="float-right">创建新项目</a>-->
+                <input type="button" onclick="toBuildProjectPage()" value="创建新项目" class="float-right textbtn">
+            </div>
+            <div class="main-box home-box-list" style="width: 960px">
+                <table id="Table1" class="display">
+                    <thead>
+                    <tr>
+                        <th>序列号</th>
+                        <th>项目名称</th>
+                        <th>类别</th>
+                        <th>启动时间</th>
+                        <th>访问权限</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="p:${projectListAsBuilder}">
+                        <td th:text = "${p.id}"></td>
+                        <td th:text = "${p.projectname}"></td>
+                        <td th:text = "${p.category}"></td>
+                        <td th:text = "${p.buildtime}"></td>
+                        <td th:text = "${p.accessright}"></td>
+                        <td><a href="#" th:onclick="'javascript:delPro('+${p.id}+')'">删除项目</a>&nbsp;<a th:href="@{/project/toMissionWindowAsBuilder(proId=${p.id})}" target="_blank">任务窗口</a>&nbsp;<a th:href = "@{/project/toManageMember(proId=${p.id})}" target="_blank">项目成员管理</a>&nbsp;<a th:href = "@{/project/toProjectView(proId=${p.id})}" target="_blank">项目视图</a></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!--Table1 end-->
+            <!--Table2 start-->
+            <div class="main-box" style="width: 960px">
+                <p>你参与的项目：</p>
+                <th:block th:if = "${projectListAsParticipant_size} == 0 ">
+                    你还没有参加过任何一个团体项目，快组建团队开始吧。
+                </th:block>
+            </div>
+            <div class="main-box home-box-list" style="width: 960px">
+
+                <table id="Table2" class="display">
+                    <thead>
+                    <tr>
+                        <th>序列号</th>
+                        <th>项目名称</th>
+                        <th>类别</th>
+                        <th>启动时间</th>
+                        <th>访问权限</th>
+                        <th>操作</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="p,pStat:${projectListAsParticipant}">
+                        <td th:text = "${p.id}"></td>
+                        <td th:text = "${p.projectname}"></td>
+                        <td th:text = "${p.category}"></td>
+                        <td th:text = "${p.buildtime}"></td>
+                        <td th:text = "${p.accessright}"></td>
+                        <td><a th:href="@{/project/toMissionWindowAsPart(proId=${p.id})}" target="_blank">任务窗口</a>&nbsp;<a th:href="@{/project/toMessages(proId=${p.id})}" target="_blank">消息列表</a><label style="color: red">(</label><label style="color: red" th:text = "${NotReadingMessageCounts[pStat.index]}"></label><label style="color: red">)</label></td>
+                    </tr>
+                    </tbody>
+                </table>
+            </div>
+            <!--Table2 end-->
+        </div>
+        <!-- main-content end -->
+        <!-- main-sider start -->
+        <!--Manage不要右面板-->
+        <!-- main-sider end -->
+        <div class="c"></div>
+        <a style="left: 842px; display: none;" rel="nofollow" href="#top" id="go-to-top">▲</a>
+
+    </div>
+    <!-- main end -->
+    <div class="c"></div>
+    <!-- footer start -->
+    <div class="copyright">
+        <p>
+
+        </p>
+    </div>
+    <!-- footer end -->
+</div>
+<!-- content wrapper end -->
+</body>
+</html>

@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>MemberManage</title>
+    <script type="text/javascript" src="../JS/jquery-3.3.1.min.js"></script>
+    <link href="/CSS/style.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="/JS/global.js"></script>
+    <!--样式文件-->
+    <link rel="stylesheet" type="text/css" href="/JS/media/css/jquery.dataTables.min.css">
+    <!--jquery js-->
+    <script src="/JS/media/js/jquery.js"></script>
+    <!--DataTables 核心 js-->
+    <script src="/JS/media/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            $('#Table').DataTable({
+                language: {
+                    url:"/TXT/zh_CN.txt"
+                }
+            });
+//
+            var table = $("#Table").DataTable();
+
+            $('#Table tbody').on( 'click', 'tr', function () {
+                if ( $(this).hasClass('selected') ) {
+                    $(this).removeClass('selected');
+//                    清空
+                    $("#update_projectId").text("");
+                    $("#update_username").text("");
+                    $("#update_membername").val("");
+                    $("#update_roletype").val("");
+                }
+                else {
+                    table.$('tr.selected').removeClass('selected');
+                    $(this).addClass('selected');
+                    if($("#updateMemberDiv").context.hidden == false){
+                        //获取所选行数据
+                        var data = table.rows('.selected').data();
+                        var proId = data[0][0];
+                        var username = data[0][1];
+                        var membername = data[0][2];
+                        var roletype = data[0][3];
+                        //填充
+                        $("#update_projectId").text(proId);
+                        $("#update_username").text(username);
+                        $("#update_membername").val(membername);
+                        $("#update_roletype").val(roletype);
+                    }
+                }
+            } );
+        });
+
+//        添加记录
+        function add() {
+            var username = $.trim($("#username").val());
+            var membername = $.trim($("#membername").val());
+            var roletype = $.trim($("#roletype").val());
+            if(username != ''){
+                if(membername != ''){
+                    if(roletype != ''){
+//                                    ajax异步增加记录
+                        var projectMember = new Object();
+                        projectMember.proid = $("#projectId").text();
+                        projectMember.userid = "";
+                        projectMember.membername = membername;
+                        projectMember.roletype = roletype;
+
+                        $.ajax({
+                            type:'post',
+                            url:"/project/addMember",
+                            dataType:'json',
+                            data:{ObjectProjectMember:JSON.stringify(projectMember),username:username},
+                            dataType:'text',
+                            timeout:1000,
+
+                            error:function () {
+                                $('#message').html("ajax异常");
+                            },
+                            success:function (result) {
+                                $('#message').html(result);
+//                                            前端响应
+                                $("#username").val("");
+                                $("#membername").val("");
+                                $("#roletype").val("");
+                                if(result=="添加成功"){
+                                    addrow(projectMember,username);
+                                }
+                            }
+                        });
+                    }
+                    else {
+                        $('#message').html("角色类型不能为空");
+                    }
+                }
+                else {
+                    $('#message').html("组员称呼不能为空");
+                }
+            }
+            else {
+                $('#message').html("用户名不能为空");
+            }
+        }
+
+//        前端添加
+        function addrow(projectMember,username) {
+            var t = $("#Table").DataTable();
+            t.row.add([
+                projectMember.proid,
+                username,
+                projectMember.membername,
+                projectMember.roletype,
+                ''
+            ]).draw();
+        }
+//        前端移除
+        function deleterow() {
+            var t = $("#Table").DataTable();
+
+            var length = t.rows('.selected').data().length;
+            if(length!=0){
+//                获取所选行数据
+                var data = t.rows('.selected').data();
+                var proId = data[0][0];
+                var username = data[0][1];
+//                异步移除组员
+                $.ajax({
+                    type:'post',
+                    url:"/project/removeMember",
+                    dataType:'text',
+                    data:{proId:proId,username:username},
+                    dataType:'text',
+                    timeout:1000,
+
+                    error:function () {
+                        $('#message').html("ajax异常");
+                    },
+                    success:function (result) {
+                        $('#message').html(result);
+//                                            前端响应
+                        if(result=="移除成功"){
+                            t.row('.selected').remove().draw( false );
+                        }
+                    }
+                });
+            }
+            else {
+                $('#message').html("未选中任一对象");
+            }
+        }
+
+        function update() {
+            var t = $("#Table").DataTable();
+
+            var length = t.rows('.selected').data().length;
+            if(length!=0){
+//                获取所选行数据
+                var data = t.rows('.selected').data();
+                var proId = data[0][0];
+                var username = data[0][1];
+                var membername = $.trim($("#update_membername").val());
+                var roletype = $("#update_roletype").val();
+//                异步修改组员
+                $.ajax({
+                    type:'post',
+                    url:"/project/updateMember",
+                    dataType:'text',
+                    data:{proId:proId,username:username,membername:membername,roletype:roletype},
+                    dataType:'text',
+                    timeout:1000,
+
+                    error:function () {
+                        $('#message').html("ajax异常");
+                    },
+                    success:function (result) {
+                        $('#message').html(result);
+//                                            前端响应
+                        if(result=="修改成功"){
+                            var c_index = t.rows('.selected').column().index();
+                            t.cell(c_index,2).data($.trim($("#update_membername").val())).draw();
+                            t.cell(c_index,3).data($("#update_roletype").val()).draw();
+                            console.log(t.rows('.selected').column().index());
+                            $("#update_projectId").text("");
+                            $("#update_username").text("");
+                            $("#update_membername").val("");
+                            $("#update_roletype").val("");
+                        }
+                    }
+                });
+            }
+            else {
+                $('#message').html("未选中任一对象");
+            }
+        }
+
+        function addMemberDivShow() {
+            $("#addMemberDiv").attr("hidden",false);
+            $("#updateMemberDiv").attr("hidden",true);
+        }
+
+        function updateMemberDivShow() {
+            $("#addMemberDiv").attr("hidden",true);
+            $("#updateMemberDiv").attr("hidden",false);
+        }
+
+        function allHidden() {
+            $("#addMemberDiv").attr("hidden",true);
+            $("#updateMemberDiv").attr("hidden",true);
+
+            $("#username").val("");
+            $("#membername").val("");
+            $("#roletype").val("");
+
+            $("#update_projectId").text("");
+            $("#update_username").text("");
+            $("#update_membername").val("");
+            $("#update_roletype").val("");
+        }
+    </script>
+</head>
+<body>
+<!-- content wrapper start -->
+<div class="wrapper">
+    <div class="nav-bar">
+        <div class="nav-panel">
+            <div class="inner-nav-panel">
+                <div class="logo">
+                    <a href="/toHomePage">
+                        <img src="/images/logo.png">
+                    </a>
+                </div>
+
+                <div class="buttons">
+                    <div style="padding: 0;width: 200px;float: left;">
+                        <img style="width: 200px;height: 40px;" src="/images/logo2.png">
+                    </div>
+                    <th:block th:if = "${session.userInfo != null}">
+                        <a th:href="@{/user/logout(username=${session.userInfo.username})}" class="buttons-active">退出登陆</a>
+                        <a href="/user/toPersonalCenter" class="buttons-active">个人中心</a>
+                        <th:block th:if = "${session.userInfo.identity != '0'}">
+                            <a href="/toBackManage" class="buttons-active">后台管理</a>
+                        </th:block>
+                        <a href="/toHelpDocument" class="buttons-active">帮助文档</a>
+                        <a href="/toManageProject" class="buttons-active">项目管理</a>
+                        <a href="/toHomePage" class="buttons-active">首页</a>
+                    </th:block>
+
+                    <th:block th:if = "${session.userInfo == null}">
+                        <a href="/toHomePage" class="buttons-active">首页</a>
+                        <a href="/user/toRegister" class="buttons-active">现在注册</a>
+                        <a href="/user/toLogin" class="buttons-active">登陆</a>
+                        <a href="/DMSInfo/toSystemSetting" class="buttons-active">系统设置</a>
+                    </th:block>
+                </div>
+                <div class="c"></div>
+            </div>
+        </div>
+    </div>
+    <!-- main start -->
+    <div class="main-content"></div>
+    <div class="main" id="main">
+        <!-- main-content start -->
+        <div class="main-content">
+            <div class="main-box">
+                <input type="button" value="移除选中组员" class="textbtn" ONCLICK="deleterow()">
+                <!--Table start-->
+                <table id="Table" class="display">
+                    <thead>
+                    <tr>
+                        <th>项目ID</th>
+                        <th>用户名</th>
+                        <th>组员称呼</th>
+                        <th>角色</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="p,pStat:${projectMemberList}">
+                        <td th:text = "${p.proid}"></td>
+                        <td th:text = "${usernameList[pStat.index]}"></td>
+                        <td th:text = "${p.membername}"></td>
+                        <td th:text = "${p.roletype}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+                <!--Table end-->
+            </div>
+        </div>
+        <!-- main-content end -->
+        <!-- main-sider start -->
+        <div class="main-sider">
+            <!--添加角色面板-->
+            <div class="sider-box">
+                <div class="sider-box-title">
+                    操作面板<div id="message"style="color: red"></div>
+                </div>
+                <div class="sider-box-title">
+                    <input type="button" value="添加组员" class="textbtn" ONCLICK="addMemberDivShow()">
+                    <input type="button" value="修改选中组员信息" class="textbtn" ONCLICK="updateMemberDivShow()">
+                </div>
+                <div class="sider-box-content" id="addMemberDiv" hidden="hidden">
+                    <label>项目ID</label>
+                    <p id="projectId" class="w200" th:text = "${projectInfo.id}"></p>
+                    <label>项目名称</label>
+                    <p id="projectName" class="w200" th:text = "${projectInfo.projectname}"></p>
+                    <label for="username">用户名:</label>
+                    <input type="text" id="username" class="w200" placeholder="输入用户名"><p/>
+                    <label for="membername">组员称呼:</label>
+                    <input type="text" id="membername" class="w200" placeholder="输入组员称呼" maxlength="10"><p/>
+                    <label for="roletype">角色:</label>
+                    <select id="roletype">
+                        <option value="2">产品经理</option>
+                        <option value="3">项目经理</option>
+                        <option value="4">项目组组长</option>
+                        <option value="5">软件开发工程师</option>
+                        <option value="6">软件测试工程师</option>
+                    </select><p/>
+                    <input type="button" value="添加" class="textbtn" onclick="add()">
+                    <input type="button" value="取消" class="textbtn" onclick="allHidden()">
+                </div>
+                <div class="sider-box-content" id="updateMemberDiv" hidden="hidden">
+                    <label>项目ID</label>
+                    <p id="update_projectId" class="w200"></p>
+                    <label>用户名</label>
+                    <p id="update_username" class="w200"></p>
+                    <label>组员称呼:</label>
+                    <input required="required" type="text" id="update_membername" class="w200" placeholder="输入组员称呼" maxlength="10"><p/>
+                    <label>角色:</label>
+                    <select id="update_roletype">
+                        <option value="2">产品经理</option>
+                        <option value="3">项目经理</option>
+                        <option value="4">项目组组长</option>
+                        <option value="5">软件开发工程师</option>
+                        <option value="6">软件测试工程师</option>
+                    </select><p/>
+                    <input type="button" value="更新信息" class="textbtn" onclick="update()">
+                    <input type="button" value="取消" class="textbtn" onclick="allHidden()">
+                </div>
+            </div>
+        </div>
+        <!-- main-sider end -->
+        <div class="c"></div>
+        <a style="left: 842px; display: none;" rel="nofollow" href="#top" id="go-to-top">▲</a>
+
+    </div>
+    <!-- main end -->
+    <div class="c"></div>
+    <!-- footer start -->
+    <div class="copyright">
+        <p>
+
+        </p>
+    </div>
+    <!-- footer end -->
+</div>
+<!-- content wrapper end -->
+
+</body>
+</html>

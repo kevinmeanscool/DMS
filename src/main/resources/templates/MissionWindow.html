@@ -1,0 +1,2730 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>MissionWindow</title>
+    <script type="text/javascript" src="../JS/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript" charset="utf-8" src="/JS/jquerysession.js"></script>
+    <link href="/CSS/style.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="/JS/global.js"></script>
+    <!--样式文件-->
+    <link rel="stylesheet" type="text/css" href="/JS/media/css/jquery.dataTables.min.css">
+    <!--jquery js-->
+    <script src="/JS/media/js/jquery.js"></script>
+    <!--DataTables 核心 js-->
+    <script src="/JS/media/js/jquery.dataTables.min.js"></script>
+    <script>
+        $(document).ready(function () {
+            //Chinese
+            $('#Table1').DataTable({
+                language: {
+                    url:"/TXT/zh_CN.txt"
+                }
+            });
+            $('#Table2').DataTable({
+                language: {
+                    url:"/TXT/zh_CN.txt"
+                }
+            });
+            $('#Table3').DataTable({
+                language: {
+                    url:"/TXT/zh_CN.txt"
+                }
+            });
+            $('#Table4').DataTable({
+                language: {
+                    url:"/TXT/zh_CN.txt"
+                }
+            });
+            $('#Table5').DataTable({
+                language: {
+                    url:"/TXT/zh_CN.txt"
+                }
+            });
+            $('#Table6').DataTable({
+                language: {
+                    url:"/TXT/zh_CN.txt"
+                }
+            });
+
+            var table1 = $("#Table1").DataTable();
+            var table2 = $("#Table2").DataTable();
+            var table3 = $("#Table3").DataTable();
+            var table4 = $("#Table4").DataTable();
+            var table5 = $("#Table5").DataTable();
+            var table6 = $("#Table6").DataTable();
+
+            //OperableMissionModuleOnClick
+            $('#Table1 tbody').on( 'click', 'tr', function () {
+                if ( $(this).hasClass('selected') ) {
+                    var data = table1.rows('.selected').data();
+
+                    $(this).removeClass('selected');
+                    //取消选中时大清洗
+                    initial();
+                    //隐藏树
+                    treeHide();
+                    //加模版隐藏
+                    var type = data[0][2];
+                    OperableCenterHiddenByModuleType(type,data);
+                    if(type==3){
+                        OperableModuleHideByPorQA(data[0][0]);
+                    }
+                    if(type==4){
+                        //这里要进行用户区分（如果不是程序员，会将缺陷修复任务指派给程序员）
+                        var proId = $("#proId").text();
+                        $.ajax({
+                            type:'post',
+                            url:"/project/getRoleTypeInProject",
+                            dataType:'json',
+                            data:{proId:proId},
+                            dataType:'text',
+                            timeout:1000,
+
+                            error:function () {
+                                $('#message').html("ajax异常");
+                            },
+                            success:function (result) {
+                                if(result == '5' || result == '6'){//程序员&测试
+                                    OperableModuleHideByDefect(data[0][0]);
+                                }
+                                else {
+                                    OperableModuleHideByAssign();
+                                }
+                            }
+                        });
+                    }
+                }
+                else {
+                    initial();
+
+                    table1.$('tr.selected').removeClass('selected');
+                    $(this).addClass('selected');
+
+                    //获取所选行数据
+                    var data = table1.rows('.selected').data();
+                    var type = data[0][2];
+
+                    //展示树
+                    treeShow(data[0][0]);
+
+                    //详情
+                    selectComponent(data[0][0],type);
+
+                    //查看详情href拼接
+                    OperableCenterShowByModuleType(type);
+                    if(type==3){
+                        OperableModuleShowByPorQA(data[0][0]);
+                    }
+                    if(type==4){
+                        //这里要进行用户区分（如果不是程序员，会将缺陷修复任务指派给程序员）
+                        var proId = $("#proId").text();
+                        $.ajax({
+                            type:'post',
+                            url:"/project/getRoleTypeInProject",
+                            dataType:'json',
+                            data:{proId:proId},
+                            dataType:'text',
+                            timeout:1000,
+
+                            error:function () {
+                                $('#message').html("ajax异常");
+                            },
+                            success:function (result) {
+                                if(result == '5' || result == '6'){//程序员&测试
+                                    OperableModuleShowByDefect(data[0][0]);
+                                }
+                                else {
+                                    //查询指派任务的状态
+                                    $.ajax({
+                                        type:'post',
+                                        url:"/mission/getAssignMissionStatus",
+                                        dataType:'json',
+                                        data:{missionModuleId:data[0][0]},
+                                        dataType:'text',
+                                        timeout:1000,
+
+                                        error:function () {
+                                            $('#message').html("ajax异常");
+                                        },
+                                        success:function (result) {
+                                            //信息填充
+                                            $("#operableModuleControlCenter_ProgramBlock_AssignMission_id").text(data[0][0]);
+                                            $("#operableModuleControlCenter_ProgramBlock_AssignMission_name").text(data[0][1]);
+                                            $("#operableModuleControlCenter_ProgramBlock_AssignMission_category").text(data[0][2]);
+                                            $("#operableModuleControlCenter_ProgramBlock_AssignMission_index").text(data[0][3]);
+                                            var memberType = "软件开发工程师";
+                                            $("#operableModuleControlCenter_ProgramBlock_AssignMission_membertype").text(memberType);
+                                            if(result=='-1'){
+                                                //对象填充
+                                                //ajax异步找对应的对象
+                                                $.ajax({
+                                                    type:'post',
+                                                    url:"/mission/searchMember",
+                                                    dataType:'text',
+                                                    data:{proId:proId,memberType:memberType},
+                                                    dataType:'text',
+                                                    timeout:1000,
+
+                                                    error:function () {
+                                                        $('#message').html("ajax异常");
+                                                    },
+                                                    success:function (result) {
+                                                        if(result == "badSearch"){
+                                                            $('#message').html("没有对应可接收任务的组员");
+                                                            $("#operableModuleControlCenter_ProgramBlock_AssignMission_publishBtn").hide();
+                                                        }
+                                                        else {
+                                                            var jsonMsg = JSON.parse(result);
+                                                            for(var i=0;i<jsonMsg.length;i++){
+                                                                var jsonObj = jsonMsg[i];
+                                                                $("#operableModuleControlCenter_ProgramBlock_AssignMission_memberSelector").append("<option value='"+jsonObj.id+"'>"+jsonObj.nickname+"</option>");
+                                                            }
+                                                            $("#operableModuleControlCenter_ProgramBlock_AssignMission_publishBtn").show();
+                                                        }
+                                                    }
+                                                });
+                                            }
+                                            else {
+                                                //hide
+                                                $("#operableModuleControlCenter_ProgramBlock_AssignMission_memberSelector_label").attr("hidden",true);
+                                                $("#operableModuleControlCenter_ProgramBlock_AssignMission_memberSelector").attr("hidden",true);
+                                                $("#operableModuleControlCenter_ProgramBlock_AssignMission_publishBtn").hide();
+                                                //show
+                                                $("#operableModuleControlCenter_ProgramBlock_AssignMission_MissionStatus1").attr("hidden",false);
+                                                $("#operableModuleControlCenter_ProgramBlock_AssignMission_MissionStatus2").attr("hidden",false);
+                                                var text;
+                                                switch (result){
+                                                    case '0':
+                                                        text = "已指派";
+                                                        break;
+                                                    case '2':
+                                                        text = "已编码完成";
+                                                        break;
+                                                    case '3':
+                                                        text = "等待测试";
+                                                        break;
+                                                    case '4':
+                                                        text = "依旧存在缺陷";
+                                                }
+                                                $("#operableModuleControlCenter_ProgramBlock_AssignMission_MissionStatus2").text(text);
+                                            }
+                                            OperableModuleShowByAssign();
+                                        }
+                                    });
+
+                                }
+                            }
+                        });
+                    }
+                }
+            } );
+
+            //InitialMissionModuleOnClick
+            $('#Table2 tbody').on( 'click', 'tr', function () {
+                if ( $(this).hasClass('selected') ) {
+                    $(this).removeClass('selected');
+                    //取消选中时大清洗
+                    initial();
+                    InitialModule_QA_Hide();
+                    InitialModule_Pro_Defect_Hide();
+                    $("#initialModuleControlCenter_content").attr("hidden",true);
+                }
+                else {
+                    initial();
+                    table2.$('tr.selected').removeClass('selected');
+                    $(this).addClass('selected');
+                    $("#initialModuleControlCenter_content").attr("hidden",false);
+                    //获取所选行数据
+                    var data = table2.rows('.selected').data();
+                    selectComponent(data[0][0],data[0][2]);
+
+                    //详情
+                    selectComponent(data[0][0],data[0][2]);
+
+                    //分析所选数据
+                    //填充到操作台
+                    $("#initialModuleControlCenter_id").text(data[0][0]);
+                    $("#initialModuleControlCenter_name").text(data[0][1]);
+                    $("#initialModuleControlCenter_category").text(data[0][2]);
+                    $("#initialModuleControlCenter_index").text(data[0][3]);
+                    $("#initialModuleControlCenter_statement").text(data[0][4]);
+                    var memberType = recognizeMemberType(data[0][2].toString(),data[0][0]);
+                    $("#initialModuleControlCenter_membertype").text(memberType);
+
+                    //如果是缺陷
+                    if(data[0][2]=='4'){
+                        //判断它当前的任务状态
+                        $.ajax({
+                            type:'post',
+                            url:"/mission/getMissionStatus",
+                            dataType:'json',
+                            data:{missionModuleId:data[0][0]},
+                            dataType:'text',
+                            timeout:1000,
+
+                            error:function () {
+                                alert("操作失败！");
+                            },
+                            success:function (result) {
+                                var missionStatus = result;
+                                if(missionStatus == '-1'){
+                                    //显示测试员发布的面板
+                                    InitialModule_QA_Show();
+                                }
+                                else{
+                                    //显示程序员操作缺陷面板
+                                    InitialModule_Pro_Defect_Show();
+                                }
+                            }
+                        });
+                    }
+                    else {
+                        //ajax异步找对应的对象
+                        var proId = $("#proId").text();
+                        $.ajax({
+                            type:'post',
+                            url:"/mission/searchMember",
+                            dataType:'text',
+                            data:{proId:proId,memberType:memberType},
+                            dataType:'text',
+                            timeout:1000,
+
+                            error:function () {
+                                $('#message').html("ajax异常");
+                            },
+                            success:function (result) {
+                                if(result == "badSearch"){
+                                    $('#message').html("没有对应可接收任务的组员");
+                                    $("#initialModuleControlCenter_publishBtn").hide();
+                                }
+                                else {
+                                    var jsonMsg = JSON.parse(result);
+                                    for(var i=0;i<jsonMsg.length;i++){
+                                        var jsonObj = jsonMsg[i];
+                                        $("#initialModuleControlCenter_memberSelector").append("<option value='"+jsonObj.id+"'>"+jsonObj.nickname+"</option>");
+                                    }
+                                    $("#initialModuleControlCenter_publishBtn").show();
+                                }
+                            }
+                        });
+                    }
+                }
+            } );
+
+            //PublishedMissionModuleOnClick
+            $('#Table3 tbody').on( 'click', 'tr', function () {
+                if ( $(this).hasClass('selected') ) {
+                    $(this).removeClass('selected');
+                    //取消选中时大清洗
+                    initial();
+                    //隐藏树
+                    treeHide();
+                }
+                else {
+                    initial();
+                    table3.$('tr.selected').removeClass('selected');
+                    $(this).addClass('selected');
+                    //获取所选行数据
+                    var data = table3.rows('.selected').data();
+                    var type = data[0][2]
+                    //展示树
+                    treeShow(data[0][0]);
+                    //详情
+                    selectComponent(data[0][0],data[0][2]);
+                }
+            } );
+
+            //RepairingMissionModuleOnClick
+            $('#Table4 tbody').on( 'click', 'tr', function () {
+                if ( $(this).hasClass('selected') ) {
+                    $(this).removeClass('selected');
+                    //取消选中时大清洗
+                    initial();
+                    //隐藏树
+                    treeHide();
+                }
+                else {
+                    initial();
+                    table4.$('tr.selected').removeClass('selected');
+                    $(this).addClass('selected');
+                    //获取所选行数据
+                    var data = table4.rows('.selected').data();
+                    var type = data[0][2];
+                    //详情
+                    selectComponent(data[0][0],data[0][2]);
+                    //展示树
+                    treeShow(data[0][0]);
+                }
+            } );
+
+            //FinishedMissionModuleOnClick
+            $('#Table5 tbody').on( 'click', 'tr', function () {
+                if ( $(this).hasClass('selected') ) {
+                    $(this).removeClass('selected');
+                    //取消选中时大清洗
+                    initial();
+                    //隐藏树
+                    treeHide();
+                }
+                else {
+                    initial();
+                    table5.$('tr.selected').removeClass('selected');
+                    $(this).addClass('selected');
+                    //获取所选行数据
+                    var data = table5.rows('.selected').data();
+                    var type = data[0][2];
+                    selectComponent(data[0][0],data[0][2]);
+                    //展示树
+                    treeShow(data[0][0]);
+                }
+            } );
+
+            //IntegratableMissionModuleOnClick
+            $('#Table6 tbody').on( 'click', 'tr', function () {
+                if ( $(this).hasClass('selected') ) {
+                    $(this).removeClass('selected');
+                    //取消选中时大清洗
+                    initial();
+                    //隐藏树
+                    treeHide();
+                    $("#integratableModuleControlCenter_content").attr("hidden",true);
+                }
+                else {
+                    initial();
+                    $("#integratableModuleControlCenter_content").attr("hidden",false);
+                    table6.$('tr.selected').removeClass('selected');
+                    $(this).addClass('selected');
+                    //获取所选行数据
+                    var data = table6.rows('.selected').data();
+                    var type = data[0][2];
+                    selectComponent(data[0][0],data[0][2]);
+                    //展示树
+                    treeShow(data[0][0]);
+                    //填充到操作台
+                    $("#integratableModuleControlCenter_id").text(data[0][0]);
+                    $("#integratableModuleControlCenter_name").text(data[0][1]);
+                    $("#integratableModuleControlCenter_category").text(data[0][2]);
+                    $("#integratableModuleControlCenter_index").text(data[0][3]);
+                    $("#integratableModuleControlCenter_statement").text(data[0][4]);
+
+                    if(type == '4')//缺陷
+                    {
+                        $("#integratableModuleControlCenter_membertype").text("软件开发工程师");
+                        //查询指派任务的状态
+                        $.ajax({
+                            type:'post',
+                            url:"/mission/getAssignMissionStatus",
+                            dataType:'json',
+                            data:{missionModuleId:data[0][0]},
+                            dataType:'text',
+                            timeout:1000,
+
+                            error:function () {
+                                $('#message').html("ajax异常");
+                            },
+                            success:function (result) {
+                                //hide
+                                $("#integratableModuleControlCenter_memberSelector_label").attr("hidden",true);
+                                $("#integratableModuleControlCenter_memberSelector").attr("hidden",true);
+                                $("#integratableModuleControlCenter_publishBtn").hide();
+                                //show
+                                $("#integratableModuleControlCenter_missionStatus1").attr("hidden",false);
+                                $("#integratableModuleControlCenter_missionStatus2").attr("hidden",false);
+                                var text;
+                                switch (result){
+                                    case '0':
+                                        text = "已指派";
+                                        break;
+                                    case '2':
+                                        text = "已编码完成";
+                                        break;
+                                    case '3':
+                                        text = "等待测试";
+                                        break;
+                                    case '4':
+                                        text = "依旧存在缺陷";
+                                }
+                                $("#integratableModuleControlCenter_missionStatus2").text(text);
+                            }
+                        });
+                    }
+                    else {
+                        $("#integratableModuleControlCenter_membertype").text("软件测试工程师");
+
+                        //判断是否可以集成
+                        $.ajax({
+                            type:'post',
+                            url:"/mission/whetherMissionModuleCanBeIntegrated",
+                            dataType:'json',
+                            data:{missionModuleId:data[0][0]},
+                            dataType:'text',
+                            timeout:1000,
+
+                            error:function () {
+                                $('#message').html("ajax异常");
+                            },
+                            success:function (result) {
+                                if(result == "ok"){
+                                    //获取当前任务状态
+                                    $.ajax({
+                                        type:'post',
+                                        url:"/mission/getMissionStatus",
+                                        dataType:'json',
+                                        data:{missionModuleId:data[0][0]},
+                                        dataType:'text',
+                                        timeout:1000,
+
+                                        error:function () {
+                                            alert("操作失败！");
+                                        },
+                                        success:function (result) {
+                                            var missionStatus = result;
+
+                                            if(missionStatus == '2'){
+                                                //已编码状态(可发布测试任务，进入待测试状态)
+                                                var memberType = "软件测试工程师";
+                                                //ajax异步找对应的对象
+                                                var proId = $("#proId").text();
+                                                $.ajax({
+                                                    type:'post',
+                                                    url:"/mission/searchMember",
+                                                    dataType:'text',
+                                                    data:{proId:proId,memberType:memberType},
+                                                    dataType:'text',
+                                                    timeout:1000,
+
+                                                    error:function () {
+                                                        $('#message').html("ajax异常");
+                                                    },
+                                                    success:function (result) {
+                                                        if(result == "badSearch"){
+                                                            $('#message').html("没有对应可接收任务的组员");
+                                                            $("#integratableModuleControlCenter_publishBtn").hide();
+                                                        }
+                                                        else {
+                                                            var jsonMsg = JSON.parse(result);
+                                                            for(var i=0;i<jsonMsg.length;i++){
+                                                                var jsonObj = jsonMsg[i];
+                                                                $("#integratableModuleControlCenter_memberSelector").append("<option value='"+jsonObj.id+"'>"+jsonObj.nickname+"</option>");
+                                                            }
+                                                            $("#integratableModuleControlCenter_publishBtn").show();
+                                                        }
+                                                    }
+                                                });
+                                            }
+                                            else if(missionStatus=='3'){
+                                                $("#integratableModuleControlCenter_memberSelector").attr("hidden",true);
+                                                $("#integratableModuleControlCenter_memberSelector_label").attr("hidden",true);
+                                                $("#integratableModuleControlCenter_publishBtn").hide();
+                                                $("#integratableModuleControlCenter_missionStatus1").attr("hidden",false);
+                                                $("#integratableModuleControlCenter_missionStatus2").text("正在测试");
+                                                $("#integratableModuleControlCenter_missionStatus2").attr("hidden",false);
+                                            }
+                                        }
+                                    });
+                                }
+                                else {
+                                    //hide
+                                    $("#integratableModuleControlCenter_memberSelector_label").attr("hidden",true);
+                                    $("#integratableModuleControlCenter_memberSelector").attr("hidden",true);
+                                    $("#integratableModuleControlCenter_publishBtn").hide();
+                                    //show
+                                    $("#integratableModuleControlCenter_missionStatus1").attr("hidden",false);
+                                    $("#integratableModuleControlCenter_missionStatus2").attr("hidden",false);
+                                    $("#integratableModuleControlCenter_missionStatus2").text(result);
+                                }
+                            }
+                        });
+                    }
+                }
+            } );
+        });
+
+
+        //DAO方法
+        function publishMission() {
+            //获取Table2&3对象
+            var table2 = $("#Table2").DataTable();
+            var table3 = $("#Table3").DataTable();
+            //获取发布任务必要的信息
+            var missionModuleId = $("#initialModuleControlCenter_id").text();
+            var receiverId = $("#initialModuleControlCenter_memberSelector").val();
+            var proId = $("#proId").text();
+
+            $.ajax({
+                type:'post',
+                url:"/mission/publishMission",
+                dataType:'json',
+                data:{missionModuleId:missionModuleId,receiverId:receiverId,proId:proId},
+                dataType:'text',
+                timeout:1000,
+
+                error:function () {
+                    $('#message').html("ajax异常");
+                },
+                success:function (result) {
+                    var jsonMsg = JSON.parse(result);
+                    console.log(jsonMsg);
+                    console.log(jsonMsg.resultObj);
+                    $('#message').html(jsonMsg.message);
+                    //前端响应
+                    if(jsonMsg.message=="任务发布成功"){
+                        //初始模块中选项移除
+                        table2.row('.selected').remove().draw( false );
+                        //Initial_size减1
+                        initialMissionModuleSubtractOne();
+                        //已发布模块增加
+                        table3.row.add([
+                            jsonMsg.resultObj[0].id,
+                            jsonMsg.resultObj[0].mimoname,
+                            jsonMsg.resultObj[0].category,
+                            jsonMsg.resultObj[0].moduleindex,
+                            jsonMsg.resultObj[0].statement,
+                            jsonMsg.resultObj[1].publishtime,
+                            jsonMsg.resultObj[1].publisherid,
+                            jsonMsg.resultObj[1].receiverid
+                        ]).draw();
+                        //Published_size加1
+                        publishedMissionModuleAddOne();
+                    }
+                }
+            });
+            initial();
+        }
+
+        function publishMission_QA() {
+            //获取Table2&3对象
+            var table2 = $("#Table2").DataTable();
+            var table3 = $("#Table3").DataTable();
+            //获取发布任务必要的信息
+            var missionModuleId = $("#initialModuleControlCenter_id").text();
+            var proId = $("#proId").text();
+
+            $.ajax({
+                type:'post',
+                url:"/mission/publishMission_QA",
+                dataType:'json',
+                data:{missionModuleId:missionModuleId,proId:proId},
+                dataType:'text',
+                timeout:1000,
+
+                error:function () {
+                    $('#message').html("ajax异常");
+                },
+                success:function (result) {
+                    var jsonMsg = JSON.parse(result);
+                    console.log(jsonMsg);
+                    console.log(jsonMsg.resultObj);
+                    $('#message').html(jsonMsg.message);
+                    //前端响应
+                    if(jsonMsg.message=="任务发布成功"){
+                        //初始模块中选项移除
+                        table2.row('.selected').remove().draw( false );
+                        //Initial_size减1
+                        initialMissionModuleSubtractOne();
+                        //已发布模块增加
+                        table3.row.add([
+                            jsonMsg.resultObj[0].id,
+                            jsonMsg.resultObj[0].mimoname,
+                            jsonMsg.resultObj[0].category,
+                            jsonMsg.resultObj[0].moduleindex,
+                            jsonMsg.resultObj[0].statement,
+                            jsonMsg.resultObj[1].publishtime,
+                            jsonMsg.resultObj[1].publisherid,
+                            jsonMsg.resultObj[1].receiverid
+                        ]).draw();
+                        //Published_size加1
+                        publishedMissionModuleAddOne();
+                    }
+                }
+            });
+            initial();
+        }
+
+        function publishMission_Pro_Defect() {
+            //获取Table2&3对象
+            var table2 = $("#Table2").DataTable();
+            var table3 = $("#Table3").DataTable();
+            //获取发布任务必要的信息
+            var missionModuleId = $("#initialModuleControlCenter_id").text();
+            var proId = $("#proId").text();
+
+            $.ajax({
+                type:'post',
+                url:"/mission/publishMission_Pro_Defect",
+                dataType:'json',
+                data:{missionModuleId:missionModuleId,proId:proId},
+                dataType:'text',
+                timeout:1000,
+
+                error:function () {
+                    $('#message').html("ajax异常");
+                },
+                success:function (result) {
+                    var jsonMsg = JSON.parse(result);
+                    console.log(jsonMsg);
+                    console.log(jsonMsg.resultObj);
+                    $('#message').html(jsonMsg.message);
+                    //前端响应
+                    //初始模块中选项移除
+                    table2.row('.selected').remove().draw( false );
+                    //Initial_size减1
+                    initialMissionModuleSubtractOne();
+                    //已发布模块增加
+                    table3.row.add([
+                        jsonMsg.resultObj[0].id,
+                        jsonMsg.resultObj[0].mimoname,
+                        jsonMsg.resultObj[0].category,
+                        jsonMsg.resultObj[0].moduleindex,
+                        jsonMsg.resultObj[0].statement,
+                        jsonMsg.resultObj[1].publishtime,
+                        jsonMsg.resultObj[1].publisherid,
+                        jsonMsg.resultObj[1].receiverid
+                    ]).draw();
+                    //Published_size加1
+                    publishedMissionModuleAddOne();
+                }
+            });
+            initial();
+        }
+
+        function buildMissionModule() {
+            var table1 = $("#Table1").DataTable();
+            var data = table1.rows('.selected').data();
+            //获取当前项目Id
+            var proId = $("#proId").text();
+            //判断当前选中的是何种类型
+            var type = data[0][2];
+            //获取当前选中模块的id
+            var selectedModuleId = data[0][0];
+
+            //获取当前用户在本项目的角色
+            var roleType;
+            $.ajax({
+                type:'post',
+                url:"/project/getRoleTypeInProject",
+                dataType:'json',
+                data:{proId:proId},
+                dataType:'text',
+                timeout:1000,
+                async:false,
+
+                error:function () {
+                    $('#message').html("ajax异常");
+                },
+                success:function (result) {
+                    roleType = result;
+                }
+            });
+
+            //判断非空
+            if(NonEmpty(type,roleType) == true){
+
+
+                if(roleType=='6'){//测试
+                    var formData = new FormData();
+                    formData.append('title',$("#operableModuleControlCenter_Defect_Title").val());
+                    formData.append('defectDescription',$("#operableModuleControlCenter_Defect_Description").val());
+                    formData.append('severity',$("#operableModuleControlCenter_Defect_Severity").val());
+                    formData.append('fatherIndex',selectedModuleId);
+                    formData.append('proId',proId);
+                    $.ajax({
+                        type:'post',
+                        url:"/mission/buildDefect",
+                        dataType:'json',
+                        data:formData,
+                        dataType:'text',
+                        processData:false,
+                        contentType:false,
+
+                        error:function () {
+                            alert("失败！");
+                        },
+                        success:function (result) {
+                            var jsonMsg = JSON.parse(result);
+                            $("#message").html(jsonMsg.message);
+                            //对应Table前端响应
+                            var table2 = $("#Table2").DataTable();
+                            table2.row.add([
+                                jsonMsg.resultObj.id,
+                                jsonMsg.resultObj.mimoname,
+                                jsonMsg.resultObj.category,
+                                jsonMsg.resultObj.moduleindex,
+                                jsonMsg.resultObj.statement,
+                                jsonMsg.resultObj.registertime,
+                                jsonMsg.resultObj.operatorid,
+                                jsonMsg.resultObj.fatherindex
+                            ]).draw();
+                            initialMissionModuleAddOne();
+                        }
+                    });
+                }
+                else {
+                    //项目
+                    if(type == 0){
+                        //new需求对象
+                        var Req = new Object();
+                        Req.reqname = $.trim($("#operableModuleControlCenter_req_Name").val());
+                        Req.businessreq = $("#operableModuleControlCenter_req_BusinessReq").val();
+                        Req.userreq = $("#operableModuleControlCenter_req_UserReq").val();
+                        Req.functionalreq = $("#operableModuleControlCenter_req_FunctionalReq").val();
+                        Req.nonfunctionalreq = $("#operableModuleControlCenter_req_NonFunctionalReq").val();
+
+                        $.ajax({
+                            type:'post',
+                            url:"/mission/buildReq",
+                            dataType:'json',
+                            data:{ObjectReq:JSON.stringify(Req),FatherIndex:selectedModuleId,proId:proId},
+                            dataType:'text',
+                            timeout:1000,
+
+                            error:function () {
+                                alert("保存失败！");
+                            },
+                            success:function (result) {
+                                var jsonMsg = JSON.parse(result);
+                                $("#message").html(jsonMsg.message);
+                                //对应Table前端响应
+                                var table2 = $("#Table2").DataTable();
+                                table2.row.add([
+                                    jsonMsg.resultObj.id,
+                                    jsonMsg.resultObj.mimoname,
+                                    jsonMsg.resultObj.category,
+                                    jsonMsg.resultObj.moduleindex,
+                                    jsonMsg.resultObj.statement,
+                                    jsonMsg.resultObj.registertime,
+                                    jsonMsg.resultObj.operatorid,
+                                    jsonMsg.resultObj.fatherindex
+                                ]).draw();
+                                initialMissionModuleAddOne();
+                            }
+                        });
+
+                    }
+                    //需求
+                    else if(type == 1){
+                        //new总体设计对象
+                        var formData = new FormData();
+                        formData.append('tolName',$("#operableModuleControlCenter_tolDesign_Name").val());
+                        formData.append('processLogic',$("#operableModuleControlCenter_tolDesign_ProcessLogic").val());
+                        formData.append('fatherIndex',selectedModuleId);
+                        formData.append('proId',proId);
+
+                        var softwareStructure = $("#operableModuleControlCenter_tolDesign_uploadImg")[0].files[0];
+                        if(softwareStructure === undefined){
+                            $.ajax({
+                                type:'post',
+                                url:"/mission/buildTolDesign_noImg",
+                                dataType:'json',
+                                data:formData,
+                                dataType:'text',
+                                processData:false,
+                                contentType:false,
+
+                                error:function () {
+                                    alert("保存失败！");
+                                },
+                                success:function (result) {
+                                    var jsonMsg = JSON.parse(result);
+                                    $("#message").html(jsonMsg.message);
+                                    //对应Table前端响应
+                                    var table2 = $("#Table2").DataTable();
+                                    table2.row.add([
+                                        jsonMsg.resultObj.id,
+                                        jsonMsg.resultObj.mimoname,
+                                        jsonMsg.resultObj.category,
+                                        jsonMsg.resultObj.moduleindex,
+                                        jsonMsg.resultObj.statement,
+                                        jsonMsg.resultObj.registertime,
+                                        jsonMsg.resultObj.operatorid,
+                                        jsonMsg.resultObj.fatherindex
+                                    ]).draw();
+                                    initialMissionModuleAddOne();
+                                }
+                            });
+                        }
+                        else {
+                            formData.append('softwareStructure',$("#operableModuleControlCenter_tolDesign_uploadImg")[0].files[0]);
+
+                            $.ajax({
+                                type:'post',
+                                url:"/mission/buildTolDesign",
+                                dataType:'json',
+                                data:formData,
+                                dataType:'text',
+                                processData:false,
+                                contentType:false,
+
+                                error:function () {
+                                    alert("保存失败！");
+                                },
+                                success:function (result) {
+                                    var jsonMsg = JSON.parse(result);
+                                    $("#message").html(jsonMsg.message);
+                                    //对应Table前端响应
+                                    var table2 = $("#Table2").DataTable();
+                                    table2.row.add([
+                                        jsonMsg.resultObj.id,
+                                        jsonMsg.resultObj.mimoname,
+                                        jsonMsg.resultObj.category,
+                                        jsonMsg.resultObj.moduleindex,
+                                        jsonMsg.resultObj.statement,
+                                        jsonMsg.resultObj.registertime,
+                                        jsonMsg.resultObj.operatorid,
+                                        jsonMsg.resultObj.fatherindex
+                                    ]).draw();
+                                    initialMissionModuleAddOne();
+                                }
+                            });
+                        }
+
+                    }
+                    //总体设计
+                    else if(type == 2){
+                        //new详细设计对象
+                        var formData = new FormData();
+                        formData.append('detName',$("#operableModuleControlCenter_DetDesign_DetName").val());
+                        formData.append('arithmetic',$("#operableModuleControlCenter_DetDesign_Arithmetic").val());
+                        formData.append('limitingCondition',$("#operableModuleControlCenter_DetDesign_LimitingCondition").val());
+                        formData.append('input',$("#operableModuleControlCenter_DetDesign_Input").val());
+                        formData.append('output',$("#operableModuleControlCenter_DetDesign_Output").val());
+                        formData.append('fatherIndex',selectedModuleId);
+                        formData.append('proId',proId);
+
+
+                        var processLogic = $("#operableModuleControlCenter_DetDesign_uploadImg")[0].files[0];
+
+                        if(processLogic === undefined){
+                            $.ajax({
+                                type:'post',
+                                url:"/mission/buildDetDesign_noImg",
+                                dataType:'json',
+                                data:formData,
+                                dataType:'text',
+                                processData:false,
+                                contentType:false,
+
+                                error:function () {
+                                    alert("失败！");
+                                },
+                                success:function (result) {
+                                    var jsonMsg = JSON.parse(result);
+                                    $("#message").html(jsonMsg.message);
+                                    //对应Table前端响应
+                                    var table2 = $("#Table2").DataTable();
+                                    table2.row.add([
+                                        jsonMsg.resultObj.id,
+                                        jsonMsg.resultObj.mimoname,
+                                        jsonMsg.resultObj.category,
+                                        jsonMsg.resultObj.moduleindex,
+                                        jsonMsg.resultObj.statement,
+                                        jsonMsg.resultObj.registertime,
+                                        jsonMsg.resultObj.operatorid,
+                                        jsonMsg.resultObj.fatherindex
+                                    ]).draw();
+                                    initialMissionModuleAddOne();
+                                }
+                            });
+                        }
+                        else {
+                            formData.append('processLogic',$("#operableModuleControlCenter_DetDesign_uploadImg")[0].files[0]);
+                            $.ajax({
+                                type:'post',
+                                url:"/mission/buildDetDesign",
+                                dataType:'json',
+                                data:formData,
+                                dataType:'text',
+                                processData:false,
+                                contentType:false,
+
+                                error:function () {
+                                    alert("失败！");
+                                },
+                                success:function (result) {
+                                    var jsonMsg = JSON.parse(result);
+                                    $("#message").html(jsonMsg.message);
+                                    //对应Table前端响应
+                                    var table2 = $("#Table2").DataTable();
+                                    table2.row.add([
+                                        jsonMsg.resultObj.id,
+                                        jsonMsg.resultObj.mimoname,
+                                        jsonMsg.resultObj.category,
+                                        jsonMsg.resultObj.moduleindex,
+                                        jsonMsg.resultObj.statement,
+                                        jsonMsg.resultObj.registertime,
+                                        jsonMsg.resultObj.operatorid,
+                                        jsonMsg.resultObj.fatherindex
+                                    ]).draw();
+                                    initialMissionModuleAddOne();
+                                }
+                            });
+                        }
+                    }
+                    //详细设计
+                    else if(type == 3){
+                        //获取任务的当前状态
+                        $.ajax({
+                            type:'post',
+                            url:"/mission/getMissionStatus",
+                            dataType:'json',
+                            data:{missionModuleId:selectedModuleId},
+                            dataType:'text',
+                            timeout:1000,
+
+                            error:function () {
+                                alert("操作失败！");
+                            },
+                            success:function (result) {
+                                var missionStatus = result;
+                                console.log(result);
+                                //如果是初始状态，就执行状态改变
+                                if(missionStatus == '0'){
+                                    //改变任务状态为已编码
+                                    $.ajax({
+                                        type:'post',
+                                        url:"/mission/completeModuleEditing",
+                                        dataType:'json',
+                                        data:{missionModuleId:selectedModuleId},
+                                        dataType:'text',
+                                        timeout:1000,
+
+                                        error:function () {
+                                            alert("操作失败！");
+                                        },
+                                        success:function (result) {
+                                            var jsonMsg = JSON.parse(result);
+                                            $("#message").html(jsonMsg.message);
+                                            //对应Table前端响应
+                                            //表2增加
+                                            var table2 = $("#Table2").DataTable();
+                                            table2.row.add([
+                                                jsonMsg.resultObj.id,
+                                                jsonMsg.resultObj.mimoname,
+                                                jsonMsg.resultObj.category,
+                                                jsonMsg.resultObj.moduleindex,
+                                                jsonMsg.resultObj.statement,
+                                                jsonMsg.resultObj.registertime,
+                                                jsonMsg.resultObj.operatorid,
+                                                jsonMsg.resultObj.fatherindex
+                                            ]).draw();
+                                            initialMissionModuleAddOne();
+                                            //表1减少
+                                            table1.row('.selected').remove().draw( false );
+                                            operableMissionModuleSubtractOne();
+                                        }
+                                    });
+                                }
+                                //如果是待测试状态，就执行缺陷审核
+                                else if(missionStatus == '3'){
+                                    var formData = new FormData();
+                                    formData.append('title',$("#operableModuleControlCenter_Defect_Title").val());
+                                    formData.append('defectDescription',$("#operableModuleControlCenter_Defect_Description").val());
+                                    formData.append('severity',$("#operableModuleControlCenter_Defect_Severity").val());
+                                    formData.append('fatherIndex',selectedModuleId);
+                                    formData.append('proId',proId);
+                                    $.ajax({
+                                        type:'post',
+                                        url:"/mission/buildDefect",
+                                        dataType:'json',
+                                        data:formData,
+                                        dataType:'text',
+                                        processData:false,
+                                        contentType:false,
+
+                                        error:function () {
+                                            alert("失败！");
+                                        },
+                                        success:function (result) {
+                                            var jsonMsg = JSON.parse(result);
+                                            $("#message").html(jsonMsg.message);
+                                            //对应Table前端响应
+                                            var table2 = $("#Table2").DataTable();
+                                            table2.row.add([
+                                                jsonMsg.resultObj.id,
+                                                jsonMsg.resultObj.mimoname,
+                                                jsonMsg.resultObj.category,
+                                                jsonMsg.resultObj.moduleindex,
+                                                jsonMsg.resultObj.statement,
+                                                jsonMsg.resultObj.registertime,
+                                                jsonMsg.resultObj.operatorid,
+                                                jsonMsg.resultObj.fatherindex
+                                            ]).draw();
+                                            initialMissionModuleAddOne();
+                                        }
+                                    });
+                                }
+                            }
+                        });
+                    }
+                }
+                //清空输入
+                initial();
+            }
+        }
+        
+        function NonEmpty(type,roleType) {
+            if(roleType == '6'){//测试加缺陷
+                if($.trim($("#operableModuleControlCenter_Defect_Title").val())!= ""){
+                    if($.trim($("#operableModuleControlCenter_Defect_Description").val())!= ""){
+                        if($.trim($("#operableModuleControlCenter_Defect_Severity").val())!= ""){
+                            return true;
+                        }
+                        else {
+                            alert("严重程度不能为空！")
+                            return false;
+                        }
+                    }
+                    else {
+                        alert("缺陷描述不能为空！")
+                        return false;
+                    }
+                }
+                else {
+                    alert("缺陷标题不能为空！")
+                    return false;
+                }
+            }
+            else {
+                switch (type){
+                    case '0'://项目下创建需求
+                        if($.trim($("#operableModuleControlCenter_req_Name").val())!= ""){
+                            if($.trim($("#operableModuleControlCenter_req_BusinessReq").val())!= ""){
+                                if($.trim($("#operableModuleControlCenter_req_UserReq").val())!= ""){
+                                    if($.trim($("#operableModuleControlCenter_req_FunctionalReq").val())!= ""){
+                                        if($.trim($("#operableModuleControlCenter_req_NonFunctionalReq").val())!= ""){
+                                            return true;
+                                        }
+                                        else {
+                                            alert("非功能性需求不能为空！没有则填写：无。");
+                                            return false;
+                                        }
+                                    }
+                                    else {
+                                        alert("功能需求不能为空！没有则填写：无。");
+                                        return false;
+                                    }
+                                }
+                                else {
+                                    alert("用户需求不能为空！没有则填写：无。");
+                                    return false;
+                                }
+                            }
+                            else {
+                                alert("业务需求不能为空！没有则填写：无。");
+                                return false;
+                            }
+                        }
+                        else {
+                            alert("需求名称不能为空！");
+                            return false;
+                        }
+                        break;
+                    case '1'://需求下创建总体设计
+                        if($.trim($("#operableModuleControlCenter_tolDesign_Name").val())!= ""){
+                            if($.trim($("#operableModuleControlCenter_tolDesign_ProcessLogic").val())!= ""){
+                                return true;
+                            }
+                            else {
+                                alert("功能描述不能为空！没有则填写：无。")
+                                return false;
+                            }
+                        }
+                        else {
+                            alert("总体设计名称不能为空！")
+                            return false;
+                        }
+                        break;
+                    case '2'://总体设计下创建详细设计
+                        if($.trim($("#operableModuleControlCenter_DetDesign_DetName").val())!= ""){
+                            if($.trim($("#operableModuleControlCenter_DetDesign_Arithmetic").val())!= ""){
+                                if($.trim($("#operableModuleControlCenter_DetDesign_LimitingCondition").val())!= ""){
+                                    if($.trim($("#operableModuleControlCenter_DetDesign_Input").val())!= ""){
+                                        if($.trim($("#operableModuleControlCenter_DetDesign_Output").val())!= ""){
+                                            return true;
+                                        }
+                                        else {
+                                            alert("输出不能为空！");
+                                            return false;
+                                        }
+                                    }
+                                    else {
+                                        alert("输入不能为空！");
+                                        return false;
+                                    }
+                                }
+                                else {
+                                    alert("限制条件不能为空！没有则填写：无。");
+                                    return false;
+                                }
+                            }
+                            else {
+                                alert("算法不能为空！没有则填写：无。");
+                                return false;
+                            }
+                        }
+                        else {
+                            alert("详细设计名称不能为空！");
+                            return false;
+                        }
+                        break;
+                }
+            }
+        }
+
+        function removeMissionModule() {
+            var table2 = $("#Table2").DataTable();
+            var data = table2.rows('.selected').data();
+
+            //判断当前选中的是何种类型
+            var category = data[0][2];
+            //获取当前选中模块真实索引
+            var moduleIndex = data[0][3];
+            //获取当前选中模块的id
+            var selectedModuleId = data[0][0];
+
+            $.ajax({
+                type:'post',
+                url:"/mission/removeModule",
+                dataType:'text',
+                data:{missionModuleId:selectedModuleId,category:category,moduleIndex:moduleIndex},
+                dataType:'text',
+                timeout:1000,
+
+                error:function () {
+                    alert("操作失败！");
+                },
+                success:function (result) {
+                    $("#message").html(result);
+                    //前端响应
+                    if(result == "移除成功"){
+                        table2.row('.selected').remove().draw( false );
+                        initialMissionModuleSubtractOne();
+                    }
+                }
+            });
+            initial();
+        }
+
+        function completeTheTest() {
+            //完结当前模块的测试过程，如果该模块存在缺陷，就将该模块推送至待修复模块
+            //如果无缺陷，就将该模块推送至已完成模块
+
+            //获取Table1&3&4对象
+            var table1 = $("#Table1").DataTable();
+            var table4 = $("#Table4").DataTable();
+            var table5 = $("#Table5").DataTable();
+
+            //获取必要信息
+            var data = table1.rows('.selected').data();
+
+            var missionModuleId  = data[0][0];
+            var proId = $("#proId").text();
+
+            $.ajax({
+                type:'post',
+                url:"/mission/completeTheTest",
+                dataType:'json',
+                data:{missionModuleId:missionModuleId,proId:proId},
+                dataType:'text',
+                timeout:1000,
+
+                error:function () {
+                    $('#message').html("ajax异常");
+                },
+                success:function (result) {
+                    var jsonMsg = JSON.parse(result);
+                    var message = jsonMsg.message;
+                    if(message=='true'){
+                        $('#message').html("提交成功，因模块再无缺陷，进入已完成队列。");
+                        //可操作模块中选项移除
+                        table1.row('.selected').remove().draw( false );
+                        //Operable_size减1
+                        operableMissionModuleSubtractOne();
+                        //已完成模块增加
+                        table5.row.add([
+                            jsonMsg.resultObj.id,
+                            jsonMsg.resultObj.mimoname,
+                            jsonMsg.resultObj.category,
+                            jsonMsg.resultObj.moduleindex,
+                            jsonMsg.resultObj.registertime,
+                            jsonMsg.resultObj.operatorid,
+                        ]).draw();
+                        //Finished_size加1
+                        finishedMissionModuleAddOne();
+
+                        //判断指派任务是否可以完成
+
+                    }
+                    else {
+                        $('#message').html("提交成功，因模块存在缺陷，进入待修复队列。");
+                        //可操作模块中选项移除
+                        table1.row('.selected').remove().draw( false );
+                        //Operable_size减1
+                        operableMissionModuleSubtractOne();
+                        //待修复模块增加
+                        table4.row.add([
+                            jsonMsg.resultObj.id,
+                            jsonMsg.resultObj.mimoname,
+                            jsonMsg.resultObj.category,
+                            jsonMsg.resultObj.moduleindex,
+                            jsonMsg.resultObj.registertime,
+                            jsonMsg.resultObj.operatorid,
+                        ]).draw();
+                        //Finished_size加1
+                        repairingMissionModuleAddOne();
+                    }
+
+                }
+            });
+            initial();
+        }
+
+        function repairTheDefect() {
+            //获取Table1&2对象
+            var table1 = $("#Table1").DataTable();
+            var table2 = $("#Table2").DataTable();
+
+            //获取必要信息
+            var data = table1.rows('.selected').data();
+
+            var missionModuleId  = data[0][0];
+            var proId = $("#proId").text();
+            var solutionDescription = $("#operableModuleControlCenter_ProgramBlock_Programmer_Repair_SolutionDescription").val();
+
+            $.ajax({
+                type:'post',
+                url:"/mission/repairTheDefect",
+                dataType:'json',
+                data:{missionModuleId:missionModuleId,proId:proId,solutionDescription:solutionDescription},
+                dataType:'text',
+                timeout:1000,
+
+                error:function () {
+                    $('#message').html("ajax异常");
+                },
+                success:function (result) {
+                    var jsonMsg = JSON.parse(result);
+                    $("#message").html(jsonMsg.message);
+                    //可操作模块中选项移除
+                    table1.row('.selected').remove().draw( false );
+                    //Operable_size减1
+                    operableMissionModuleSubtractOne();
+                    //初始化模块增加
+                    //待修复模块增加
+                    table2.row.add([
+                        jsonMsg.resultObj.id,
+                        jsonMsg.resultObj.mimoname,
+                        jsonMsg.resultObj.category,
+                        jsonMsg.resultObj.moduleindex,
+                        jsonMsg.resultObj.statement,
+                        jsonMsg.resultObj.registertime,
+                        jsonMsg.resultObj.operatorid,
+                        jsonMsg.resultObj.fatherindex
+                    ]).draw();
+                    //initial_size加1
+                    initialMissionModuleAddOne();
+                }
+            });
+            initial();
+        }
+        
+        function defectPassing() {
+            //获取Table1&5对象
+            var table1 = $("#Table1").DataTable();
+            var table5 = $("#Table5").DataTable();
+            //获取必要信息
+            var data = table1.rows('.selected').data();
+
+            var missionModuleId  = data[0][0];
+            var proId = $("#proId").text();
+            var note = $("#operableModuleControlCenter_ProgramBlock_QA_Retesting_Note").val();
+
+            $.ajax({
+                type:'post',
+                url:"/mission/defectPassing",
+                dataType:'json',
+                data:{missionModuleId:missionModuleId,proId:proId,note:note},
+                dataType:'text',
+                timeout:1000,
+
+                error:function () {
+                    $('#message').html("ajax异常");
+                },
+                success:function (result) {
+                    var jsonMsg = JSON.parse(result);
+                    var message = jsonMsg.message;
+
+                    if(message == "success"){
+                        $("#message").html("操作成功");
+                        //前端响应
+                        //可操作模块中选项移除
+                        table1.row('.selected').remove().draw( false );
+                        //Operable_size减1
+                        operableMissionModuleSubtractOne();
+                        //已完成模块增加
+                        table5.row.add([
+                            jsonMsg.resultObj.id,
+                            jsonMsg.resultObj.mimoname,
+                            jsonMsg.resultObj.category,
+                            jsonMsg.resultObj.moduleindex,
+                            jsonMsg.resultObj.registertime,
+                            jsonMsg.resultObj.operatorid,
+                        ]).draw();
+                        //Finished_size加1
+                        finishedMissionModuleAddOne();
+                        //父模块缺陷检测
+                        $.ajax({
+                            type:'post',
+                            url:"/mission/missionModuleDefectDedecting",
+                            dataType:'json',
+                            data:{missionModuleId:missionModuleId},
+                            dataType:'text',
+                            timeout:1000,
+
+                            error:function () {
+                                $('#message').html("ajax异常");
+                            },
+                            success:function (result) {
+                                var jsonMsg = JSON.parse(result);
+                                var message = jsonMsg.message;
+                                var resultObj = jsonMsg.resultObj;
+
+                                //如果再无缺陷
+                                if(message == "true"){
+                                    var table4 = $("#Table4").DataTable();
+                                    var rows = table4.rows().data();
+                                    var size = table4.page.info().recordsTotal;
+                                    //查找对应记录的索引
+                                    for(var i= 0;i<size;i++){
+                                        if(resultObj[1].id == rows[i][0]){
+                                            table4.rows(i).remove().draw(false);//前端删除
+                                            break;
+                                        }
+                                    }
+                                    //repairing--
+                                    repairingMissionModuleSubtractOne();
+
+                                    //已完成模块增加
+                                    table5.row.add([
+                                        jsonMsg.resultObj[1].id,
+                                        jsonMsg.resultObj[1].mimoname,
+                                        jsonMsg.resultObj[1].category,
+                                        jsonMsg.resultObj[1].moduleindex,
+                                        jsonMsg.resultObj[1].registertime,
+                                        jsonMsg.resultObj[1].operatorid,
+                                    ]).draw();
+                                    //Finished_size加1
+                                    finishedMissionModuleAddOne();
+                                }
+
+                                $("#message").html("操作成功，"+resultObj[0]);
+                            }
+                        });
+                    }
+                    else {
+                        $("#message").html("异常");
+                    }
+                }
+            });
+            initial();
+        }
+
+        function defectReject() {
+            //获取Table1对象
+            var table1 = $("#Table1").DataTable();
+            //获取必要信息
+            var data = table1.rows('.selected').data();
+
+            var missionModuleId  = data[0][0];
+            var proId = $("#proId").text();
+            var note = $("#operableModuleControlCenter_ProgramBlock_QA_Retesting_Note").val();
+
+            $.ajax({
+                type:'post',
+                url:"/mission/defectReject",
+                dataType:'json',
+                data:{missionModuleId:missionModuleId,proId:proId,note:note},
+                dataType:'text',
+                timeout:1000,
+
+                error:function () {
+                    $('#message').html("ajax异常");
+                },
+                success:function (result) {
+                    if(result == "success"){
+                        $('#message').html("操作成功,问题已反馈给对应的开发者");
+                        //前端响应
+                        //可操作模块中选项移除
+                        table1.row('.selected').remove().draw( false );
+                        //Operable_size减1
+                        operableMissionModuleSubtractOne();
+                    }
+                    else {
+                        $('#message').html("异常");
+                    }
+                }
+            });
+            initial();
+        }
+
+        function bigModuleEnterToIntegrateStatus() {
+            //获取Table1&6对象
+            var table1 = $("#Table1").DataTable();
+            var table6 = $("#Table6").DataTable();
+            //获取必要信息
+            var data = table1.rows('.selected').data();
+            var missionModuleId = data[0][0];
+
+            $.ajax({
+                type:'post',
+                url:"/mission/enterIntegrateStatus",
+                dataType:'json',
+                data:{missionModuleId:missionModuleId},
+                dataType:'text',
+                timeout:1000,
+
+                error:function () {
+                    $('#message').html("ajax异常");
+                },
+                success:function (result) {
+                    var jsonMsg = JSON.parse(result);
+                    $("#message").html(jsonMsg.message);
+                    //可操作模块中选项移除
+                    table1.row('.selected').remove().draw( false );
+                    //Operable_size减1
+                    operableMissionModuleSubtractOne();
+                    //初始化模块增加
+                    //待集成模块增加
+                    table6.row.add([
+                        jsonMsg.resultObj.id,
+                        jsonMsg.resultObj.mimoname,
+                        jsonMsg.resultObj.category,
+                        jsonMsg.resultObj.moduleindex,
+                        jsonMsg.resultObj.registertime,
+                        jsonMsg.resultObj.operatorid,
+                    ]).draw();
+                    //integratable_size加1
+                    integratableMissionModuleAddOne();
+                }
+            });
+            initial();
+        }
+
+        function publishIngratableMission() {
+            //获取Table6对象
+            var table6 = $("#Table6").DataTable();
+            //获取必要信息
+            var data = table6.rows('.selected').data();
+            var missionModuleId = data[0][0];
+            var proId = $("#proId").text();
+            var receiverId = $("#integratableModuleControlCenter_memberSelector").val();
+
+            $.ajax({
+                type:'post',
+                url:"/mission/publishIngratableMission",
+                dataType:'json',
+                data:{missionModuleId:missionModuleId,proId:proId,receiverId:receiverId},
+                dataType:'text',
+                timeout:1000,
+
+                error:function () {
+                    $('#message').html("ajax异常");
+                },
+                success:function (result) {
+                    //前端响应
+                    $('#message').html(result);
+                    if(result == "任务发布成功"){
+                        $("#integratableModuleControlCenter_memberSelector").attr("hidden",true);
+                        $("#integratableModuleControlCenter_memberSelector_label").attr("hidden",true);
+                        $("#integratableModuleControlCenter_publishBtn").hide();
+                        $("#integratableModuleControlCenter_missionStatus1").attr("hidden",false);
+                        $("#integratableModuleControlCenter_missionStatus2").text("正在测试");
+                        $("#integratableModuleControlCenter_missionStatus2").attr("hidden",false);
+                    }
+                }
+            });
+        }
+        
+        function AssignMissionToPro() {
+            //获取Table1对象
+            var table1 = $("#Table1").DataTable();
+            //获取必要信息
+            var data = table1.rows('.selected').data();
+            var missionModuleId = data[0][0];
+            var proId = $("#proId").text();
+            var receiverId = $("#operableModuleControlCenter_ProgramBlock_AssignMission_memberSelector").val();
+
+            //分配指派任务给程序员
+            $.ajax({
+                type:'post',
+                url:"/mission/publishAssignMission",
+                dataType:'json',
+                data:{missionModuleId:missionModuleId,proId:proId,receiverId:receiverId},
+                dataType:'text',
+                timeout:1000,
+
+                error:function () {
+                    $('#message').html("ajax异常");
+                },
+                success:function (result) {
+                    //前端响应
+                    $('#message').html(result);
+                    //hide
+                    $("#operableModuleControlCenter_ProgramBlock_AssignMission_memberSelector_label").attr("hidden",true);
+                    $("#operableModuleControlCenter_ProgramBlock_AssignMission_memberSelector").attr("hidden",true);
+                    $("#operableModuleControlCenter_ProgramBlock_AssignMission_publishBtn").hide();
+                    //show
+                    $("#operableModuleControlCenter_ProgramBlock_AssignMission_MissionStatus1").attr("hidden",false);
+                    $("#operableModuleControlCenter_ProgramBlock_AssignMission_MissionStatus2").attr("hidden",false);
+                    $("#operableModuleControlCenter_ProgramBlock_AssignMission_MissionStatus2").text("已指派");
+                }
+            });
+        }
+
+        //前端响应方法
+        function OperableCenterShowByModuleType(type) {
+            //这里要改成由角色类型判断
+            var proId = $("#proId").text();
+            var roleType;
+            $.ajax({
+                type:'post',
+                url:"/project/getRoleTypeInProject",
+                dataType:'json',
+                data:{proId:proId},
+                dataType:'text',
+                timeout:1000,
+                async:false,
+
+                error:function () {
+                    $('#message').html("ajax异常");
+                },
+                success:function (result) {
+                    roleType = result;
+                }
+            });
+            if(roleType=='6'){
+                //获取Table1对象
+                var table1 = $("#Table1").DataTable();
+                //获取必要信息
+                var data = table1.rows('.selected').data();
+
+                $("#operableModuleControlCenter_ProgramBlock").attr("hidden",false);
+
+                if(type!='4'){
+                    OperableModuleShowByPorQA(data[0][0]);
+                }
+            }
+            else {
+                if(type == 0)
+                    $("#operableModuleControlCenter_req").attr("hidden",false);
+                else if(type == 1)
+                    $("#operableModuleControlCenter_TolDesign").attr("hidden",false);
+                else if(type ==2)
+                    $("#operableModuleControlCenter_DelDesign").attr("hidden",false);
+                else if(type ==3){
+                    $("#operableModuleControlCenter_ProgramBlock").attr("hidden",false);
+                }
+                else if(type==4){
+                    $("#operableModuleControlCenter_ProgramBlock").attr("hidden",false);
+                }
+                else
+                    alert("未知类型");
+            }
+        }
+
+        function OperableCenterHiddenByModuleType(type,data) {
+            //这里要改成由角色类型判断
+            var proId = $("#proId").text();
+            var roleType;
+            $.ajax({
+                type:'post',
+                url:"/project/getRoleTypeInProject",
+                dataType:'json',
+                data:{proId:proId},
+                dataType:'text',
+                timeout:1000,
+                async:false,
+
+                error:function () {
+                    $('#message').html("ajax异常");
+                },
+                success:function (result) {
+                    roleType = result;
+                }
+            });
+
+
+            if(roleType=='6'){
+
+                $("#operableModuleControlCenter_ProgramBlock").attr("hidden",false);
+                if(type!='4'){
+                    OperableModuleHideByPorQA(data[0][0]);
+                }
+            }
+            else {
+                if(type == 0)
+                    $("#operableModuleControlCenter_req").attr("hidden",true);
+                else if(type == 1)
+                    $("#operableModuleControlCenter_TolDesign").attr("hidden",true);
+                else if(type ==2)
+                    $("#operableModuleControlCenter_DelDesign").attr("hidden",true);
+                else if(type ==3){
+                    $("#operableModuleControlCenter_ProgramBlock").attr("hidden",true);
+                }
+                else if(type==4){
+                    $("#operableModuleControlCenter_ProgramBlock").attr("hidden",true);
+                }
+                else
+                    alert("未知类型");
+            }
+        }
+
+        function OperableModuleShow() {
+            //left
+            $("#OperableModule").attr("hidden",false);
+            $("#InitialModule").attr("hidden",true);
+            $("#PublishedModule").attr("hidden",true);
+            $("#RepairingModule").attr("hidden",true);
+            $("#FinishedModule").attr("hidden",true);
+            $("#IntegratableModule").attr("hidden",true);
+            //right
+            $("#initialModuleControlCenter").attr("hidden",true);
+            $("#operableModuleControlCenter").attr("hidden",false);
+            $("#integratableModuleControlCenter").attr("hidden",true);
+        }
+        function InitialModuleShow() {
+            //left
+            $("#OperableModule").attr("hidden",true);
+            $("#InitialModule").attr("hidden",false);
+            $("#PublishedModule").attr("hidden",true);
+            $("#RepairingModule").attr("hidden",true);
+            $("#FinishedModule").attr("hidden",true);
+            $("#IntegratableModule").attr("hidden",true);
+            //right
+            $("#initialModuleControlCenter").attr("hidden",false);
+            $("#operableModuleControlCenter").attr("hidden",true);
+            $("#integratableModuleControlCenter").attr("hidden",true);
+        }
+        function InitialModule_QA_Show() {
+            //hide
+            $("#initialModuleControlCenter_memberSelector").attr("hidden",true);
+            $("#initialModuleControlCenter_publishBtn").hide();
+            //show
+            $("#initialModuleControlCenter_memberSelector_QA").attr("hidden",false);
+            $("#initialModuleControlCenter_publishBtn_QA").show();
+        }
+        function InitialModule_QA_Hide() {
+            //show
+            $("#initialModuleControlCenter_memberSelector").attr("hidden",false);
+            $("#initialModuleControlCenter_publishBtn").show();
+            //hide
+            $("#initialModuleControlCenter_memberSelector_QA").attr("hidden",true);
+            $("#initialModuleControlCenter_publishBtn_QA").hide();
+        }
+        function InitialModule_Pro_Defect_Show() {
+            //hide
+            $("#initialModuleControlCenter_publishBtn").hide();
+            $("#initialModuleControlCenter_removeBtn").hide();
+            $("#initialModuleControlCenter_memberSelector").attr("hidden",true);
+            //show
+            $("#initialModuleControlCenter_publishBtn_Pro_Defect").show();
+            $("#initialModuleControlCenter_memberSelector_QA").attr("hidden",false);
+        }
+        function InitialModule_Pro_Defect_Hide() {
+            //hide
+            $("#initialModuleControlCenter_publishBtn_Pro_Defect").hide();
+            $("#initialModuleControlCenter_memberSelector_QA").attr("hidden",true);
+            //show
+            $("#initialModuleControlCenter_publishBtn").show();
+            $("#initialModuleControlCenter_removeBtn").show();
+            $("#initialModuleControlCenter_memberSelector").attr("hidden",false);
+        }
+        function PublishedModuleShow() {
+            //left
+            $("#OperableModule").attr("hidden",true);
+            $("#InitialModule").attr("hidden",true);
+            $("#PublishedModule").attr("hidden",false);
+            $("#RepairingModule").attr("hidden",true);
+            $("#FinishedModule").attr("hidden",true);
+            $("#IntegratableModule").attr("hidden",true);
+            //right
+            $("#initialModuleControlCenter").attr("hidden",true);
+            $("#operableModuleControlCenter").attr("hidden",true);
+            $("#integratableModuleControlCenter").attr("hidden",true);
+        }
+        function RepairModuleShow() {
+            //left
+            $("#OperableModule").attr("hidden",true);
+            $("#InitialModule").attr("hidden",true);
+            $("#PublishedModule").attr("hidden",true);
+            $("#RepairingModule").attr("hidden",false);
+            $("#FinishedModule").attr("hidden",true);
+            $("#IntegratableModule").attr("hidden",true);
+            //right
+            $("#initialModuleControlCenter").attr("hidden",true);
+            $("#operableModuleControlCenter").attr("hidden",true);
+            $("#integratableModuleControlCenter").attr("hidden",true);
+        }
+        function FinishedModuleShow() {
+            //left
+            $("#OperableModule").attr("hidden",true);
+            $("#InitialModule").attr("hidden",true);
+            $("#PublishedModule").attr("hidden",true);
+            $("#RepairingModule").attr("hidden",true);
+            $("#FinishedModule").attr("hidden",false);
+            $("#IntegratableModule").attr("hidden",true);
+            //right
+            $("#initialModuleControlCenter").attr("hidden",true);
+            $("#operableModuleControlCenter").attr("hidden",true);
+        }
+        function IntegratableModuleShow() {
+            //left
+            $("#OperableModule").attr("hidden",true);
+            $("#InitialModule").attr("hidden",true);
+            $("#PublishedModule").attr("hidden",true);
+            $("#RepairingModule").attr("hidden",true);
+            $("#FinishedModule").attr("hidden",true);
+            $("#IntegratableModule").attr("hidden",false);
+            //right
+            $("#initialModuleControlCenter").attr("hidden",true);
+            $("#operableModuleControlCenter").attr("hidden",true);
+            $("#integratableModuleControlCenter").attr("hidden",false);
+        }
+
+        function OperableModuleShowByPorQA(moduleId) {
+            //获取详细设计的当前任务状态
+            $.ajax({
+                type:'post',
+                url:"/mission/getMissionStatus",
+                dataType:'json',
+                data:{missionModuleId:moduleId},
+                dataType:'text',
+                timeout:1000,
+
+                error:function () {
+                    alert("操作失败！");
+                },
+                success:function (result) {
+                    var missionStatus = result;
+                    if(missionStatus == '0'){
+                        $("#operableModuleControlCenter_ProgramBlock_Programmer").attr("hidden",false);
+                    }
+                    else if (missionStatus == '3'){
+                        $("#operableModuleControlCenter_ProgramBlock_QA").attr("hidden",false);
+                    }
+                    else if(missionStatus == '4'){
+                        $("#operableModuleControlCenter_ProgramBlock_QA").attr("hidden",false);
+                    }
+                }
+            });
+        }
+
+        function OperableModuleHideByPorQA(moduleId) {
+
+            //获取详细设计的当前任务状态
+            $.ajax({
+                type:'post',
+                url:"/mission/getMissionStatus",
+                dataType:'json',
+                data:{missionModuleId:moduleId},
+                dataType:'text',
+                timeout:1000,
+
+                error:function () {
+                    alert("操作失败！");
+                },
+                success:function (result) {
+                    var missionStatus = result;
+                    if(missionStatus == '0'){
+                        $("#operableModuleControlCenter_ProgramBlock_Programmer").attr("hidden",true);
+                    }
+                    else if (missionStatus == '3'){
+                        $("#operableModuleControlCenter_ProgramBlock_QA").attr("hidden",true);
+                    }
+                    else if(missionStatus == '4'){
+                        $("#operableModuleControlCenter_ProgramBlock_QA").attr("hidden",true);
+                    }
+                }
+            });
+        }
+
+        function OperableModuleShowByDefect(moduleId) {
+            //获取缺陷的当前任务状态
+            $.ajax({
+                type:'post',
+                url:"/mission/getMissionStatus",
+                dataType:'json',
+                data:{missionModuleId:moduleId},
+                dataType:'text',
+                timeout:1000,
+
+                error:function () {
+                    alert("操作失败！");
+                },
+                success:function (result) {
+                    var missionStatus = result;
+                    if(missionStatus == '0'){
+                        $("#operableModuleControlCenter_ProgramBlock_Programmer_Repair").attr("hidden",false);
+                    }
+                    else if (missionStatus == '3'){
+                        $("#operableModuleControlCenter_ProgramBlock_QA_Retesting").attr("hidden",false);
+                    }
+                }
+            });
+        }
+
+        function OperableModuleHideByDefect(moduleId) {
+            //获取缺陷的当前任务状态
+            $.ajax({
+                type:'post',
+                url:"/mission/getMissionStatus",
+                dataType:'json',
+                data:{missionModuleId:moduleId},
+                dataType:'text',
+                timeout:1000,
+
+                error:function () {
+                    alert("操作失败！");
+                },
+                success:function (result) {
+                    var missionStatus = result;
+                    if(missionStatus == '0'){
+                        $("#operableModuleControlCenter_ProgramBlock_Programmer_Repair").attr("hidden",true);
+                    }
+                    else if (missionStatus == '3'){
+                        $("#operableModuleControlCenter_ProgramBlock_QA_Retesting").attr("hidden",true);
+                    }
+                }
+            });
+        }
+
+        function OperableModuleShowByAssign() {
+            $("#operableModuleControlCenter_ProgramBlock_AssignMission").attr("hidden",false);
+        }
+
+        function OperableModuleHideByAssign() {
+            $("#operableModuleControlCenter_ProgramBlock_AssignMission").attr("hidden",true);
+        }
+
+        function allClear() {
+            //operableModuleContralCenter
+              //req
+            $("#operableModuleControlCenter_req_SonModuleType").text("");
+            $("#operableModuleControlCenter_req_Name").val("");
+            $("#operableModuleControlCenter_req_BusinessReq").val("");
+            $("#operableModuleControlCenter_req_UserReq").val("");
+            $("#operableModuleControlCenter_req_FunctionalReq").val("");
+            $("#operableModuleControlCenter_req_NonFunctionalReq").val("");
+              //tolDesign
+            $("#operableModuleControlCenter_tolDesign_SonModuleType").text("");
+            $("#operableModuleControlCenter_tolDesign_Name").val("");
+            $("#operableModuleControlCenter_tolDesign_ProcessLogic").val("");
+            $("#operableModuleControlCenter_tolDesign_uploadImg").val("");
+            $("#imgPreview").empty();
+              //DetailedDesign
+            $("#operableModuleControlCenter_DetDesign_SonModuleType").text("");
+            $("#operableModuleControlCenter_DetDesign_DetName").val("");
+            $("#operableModuleControlCenter_DetDesign_uploadImg").val("");
+            $("#imgPreview_det").empty();
+            $("#operableModuleControlCenter_DetDesign_Arithmetic").val("");
+            $("#operableModuleControlCenter_DetDesign_LimitingCondition").val("");
+            $("#operableModuleControlCenter_DetDesign_Input").val("");
+            $("#operableModuleControlCenter_DetDesign_Output").val("");
+              //ProgramBlock
+                //Programmer
+                //Programmer_Repair
+            $("#operableModuleControlCenter_ProgramBlock_Programmer_Repair_SolutionDescription").val("");
+                //QA
+            $("#operableModuleControlCenter_Defect_SonModuleType").text("");
+            $("#operableModuleControlCenter_Defect_Title").val("");
+            $("#operableModuleControlCenter_Defect_Description").val("");
+            $("#operableModuleControlCenter_Defect_Severity").val("");
+                //QA_Retesting
+            $("#operableModuleControlCenter_ProgramBlock_QA_Retesting_Note").val("");
+                //AssignMission
+            $("#operableModuleControlCenter_ProgramBlock_AssignMission_id").text("");
+            $("#operableModuleControlCenter_ProgramBlock_AssignMission_name").text("");
+            $("#operableModuleControlCenter_ProgramBlock_AssignMission_category").text("");
+            $("#operableModuleControlCenter_ProgramBlock_AssignMission_index").text("");
+            $("#operableModuleControlCenter_ProgramBlock_AssignMission_membertype").text("");
+            $("#operableModuleControlCenter_ProgramBlock_AssignMission_memberSelector").val("");
+
+            //initialModuleControlCenter
+            $("#initialModuleControlCenter_id").text("");
+            $("#initialModuleControlCenter_name").text("");
+            $("#initialModuleControlCenter_category").text("");
+            $("#initialModuleControlCenter_index").text("");
+            $("#initialModuleControlCenter_statement").text("");
+            $("#initialModuleControlCenter_membertype").text("");
+            $("#initialModuleControlCenter_memberSelector").val("");
+
+            //publishedModuleControlCenter
+
+            //integratableModuleControlCenter
+            $("#integratableModuleControlCenter_id").text("");
+            $("#integratableModuleControlCenter_name").text("");
+            $("#integratableModuleControlCenter_category").text("");
+            $("#integratableModuleControlCenter_index").text("");
+            $("#integratableModuleControlCenter_statement").text("");
+            $("#integratableModuleControlCenter_membertype").text("");
+            $("#integratableModuleControlCenter_memberSelector").val("");
+
+            //Select
+            $("#selectedModuleType").text("");
+            $("#ViewDetails").attr("");
+
+        }
+
+        function allOperableCenterInitial() {
+            //operableModuleControlCenter
+            //req\TolDesign\DetDesign:none
+            //ProgramBlock
+              //Programmer\Programmer_Repair\QA\QA_Retesting:none
+              //AssignMission
+            $("#operableModuleControlCenter_ProgramBlock_AssignMission_memberSelector_label").attr("hidden",false);
+            $("#operableModuleControlCenter_ProgramBlock_AssignMission_memberSelector").attr("hidden",false);
+            $("#operableModuleControlCenter_ProgramBlock_AssignMission_MissionStatus1").attr("hidden",true);
+            $("#operableModuleControlCenter_ProgramBlock_AssignMission_MissionStatus2").attr("hidden",true);
+            //initialModuleControlCenter
+            $('#initialModuleControlCenter_memberSelector').attr("hidden",false);
+            $('#initialModuleControlCenter_memberSelector_QA').attr("hidden",true);
+            $('#initialModuleControlCenter_publishBtn_QA').hide();
+            $('#initialModuleControlCenter_publishBtn_Pro_Defect').hide();
+            $("#initialModuleControlCenter_publishBtn").show();
+            $("#initialModuleControlCenter_removeBtn").show();
+            //integratableModuleControlCenter
+            $("#integratableModuleControlCenter_memberSelector_label").attr("hidden",false);
+            $("#integratableModuleControlCenter_memberSelector").attr("hidden",false);
+            $("#integratableModuleControlCenter_missionStatus1").attr("hidden",true);
+            $("#integratableModuleControlCenter_missionStatus2").attr("hidden",true);
+            $("#integratableModuleControlCenter_publishBtn").show();
+
+            $("#selectedModuleDiv").attr("hidden",true);
+        }
+
+        function allOperableCenterHide() {
+            $("#operableModuleControlCenter_req").attr("hidden",true);
+            $("#operableModuleControlCenter_TolDesign").attr("hidden",true);
+            $("#operableModuleControlCenter_DelDesign").attr("hidden",true);
+            $("#operableModuleControlCenter_ProgramBlock").attr("hidden",true);
+            $("#initialModuleControlCenter_content").attr("hidden",true);
+            $("#integratableModuleControlCenter_content").attr("hidden",true);
+            $("#selectedModuleDiv").attr("hidden",true);
+        }
+
+        function initial() {
+            allClear();
+            allOperableCenterInitial();
+            allOperableCenterHide();
+        }
+        
+        function recognizeMemberType(moduleType,moduleId) {
+            var memberType;
+            switch (moduleType){
+                case '0'://项目
+                    memberType = "产品经理";//给产品经理
+                    break;
+                case '1'://需求
+                    memberType = "项目经理";//给项目经理
+                    break;
+                case '2'://总体设计
+                    memberType = "项目组组长";//自动给项目经理本人
+                    break;
+                case '3'://详细设计
+                    //判断任务状态
+                    $.ajax({
+                        type:'post',
+                        url:"/mission/getMissionStatus",
+                        dataType:'json',
+                        data:{missionModuleId:moduleId},
+                        dataType:'text',
+                        timeout:1000,
+                        async:false,
+
+                        error:function () {
+                            alert("操作失败！");
+                        },
+                        success:function (result) {
+                            var missionStatus = result;
+                            if(missionStatus == '0'){//未完成
+                                memberType = "软件开发工程师";//给程序员
+                            }
+                            else if (missionStatus == '2') {//已编码
+                                memberType = "软件测试工程师";//给测试
+                            }
+                            else if(missionStatus == '3'){//待测试
+                                memberType = "软件开发工程师"; //给程序员
+                            }
+                            else if(missionStatus == '-1'){//在初始，未发布任务
+                                memberType = "软件开发工程师";
+                            }
+                        }
+                    });
+                    break;
+                case '4'://缺陷模块
+                    //这里要通过缺陷的上层节点返回对应类型的字符串
+                    $.ajax({
+                        type:'post',
+                        url:"/mission/matchMissionAccepter",
+                        dataType:'json',
+                        data:{missionModuleId:moduleId},
+                        dataType:'text',
+                        timeout:1000,
+                        async:false,
+
+                        error:function () {
+                            alert("操作失败！");
+                        },
+                        success:function (result) {
+                            if(result!='fail'){
+                                memberType = result;
+                            }
+                        }
+                    });
+                    break;
+            }
+            return memberType;
+        }
+
+        function operableMissionModuleSubtractOne() {
+            var text = $("#operableMissionModuleBtn").val();
+            //取最后一位
+            var index = text.lastIndexOf(' ')
+            var size = text.substring(index+1);
+            //加1
+            var newSize = parseInt(size) - 1;
+            //删除最后一位
+            var text = text.substr(0, text.length - 1);
+            //新内容
+            var newText = text + newSize.toString();
+            //响应
+            $("#operableMissionModuleBtn").val(newText);
+        }
+
+        function initialMissionModuleAddOne(){
+            var text = $("#initialMissionModuleBtn").val();
+            //取最后一位
+            var index = text.lastIndexOf(' ')
+            var size = text.substring(index+1);
+            //加1
+            var newSize = parseInt(size) + 1;
+            //删除最后一位
+            var text = text.substr(0, text.length - 1);
+            //新内容
+            var newText = text + newSize.toString();
+            //响应
+            $("#initialMissionModuleBtn").val(newText);
+        }
+        
+        function initialMissionModuleSubtractOne() {
+            var text = $("#initialMissionModuleBtn").val();
+            //取最后一位
+            var index = text.lastIndexOf(' ')
+            var size = text.substring(index+1);
+            //加1
+            var newSize = parseInt(size) - 1;
+            //删除最后一位
+            var text = text.substr(0, text.length - 1);
+            //新内容
+            var newText = text + newSize.toString();
+            //响应
+            $("#initialMissionModuleBtn").val(newText);
+        }
+
+        function publishedMissionModuleAddOne(){
+            var text = $("#publishedMissionModuleBtn").val();
+            //取最后一位
+            var index = text.lastIndexOf(' ')
+            var size = text.substring(index+1);
+            //加1
+            var newSize = parseInt(size) + 1;
+            //删除最后一位
+            var text = text.substr(0, text.length - 1);
+            //新内容
+            var newText = text + newSize.toString();
+            //响应
+            $("#publishedMissionModuleBtn").val(newText);
+        }
+
+        function repairingMissionModuleAddOne() {
+            var text = $("#repairingMissionModuleBtn").val();
+            //取最后一位
+            var index = text.lastIndexOf(' ')
+            var size = text.substring(index+1);
+            //加1
+            var newSize = parseInt(size) + 1;
+            //删除最后一位
+            var text = text.substr(0, text.length - 1);
+            //新内容
+            var newText = text + newSize.toString();
+            //响应
+            $("#repairingMissionModuleBtn").val(newText);
+        }
+
+        function repairingMissionModuleSubtractOne() {
+            var text = $("#repairingMissionModuleBtn").val();
+            //取最后一位
+            var index = text.lastIndexOf(' ')
+            var size = text.substring(index+1);
+            //加1
+            var newSize = parseInt(size) - 1;
+            //删除最后一位
+            var text = text.substr(0, text.length - 1);
+            //新内容
+            var newText = text + newSize.toString();
+            //响应
+            $("#repairingMissionModuleBtn").val(newText);
+        }
+
+        function finishedMissionModuleAddOne() {
+            var text = $("#finishedMissionModuleBtn").val();
+            //取最后一位
+            var index = text.lastIndexOf(' ')
+            var size = text.substring(index+1);
+            //加1
+            var newSize = parseInt(size) + 1;
+            //删除最后一位
+            var text = text.substr(0, text.length - 1);
+            //新内容
+            var newText = text + newSize.toString();
+            //响应
+            $("#finishedMissionModuleBtn").val(newText);
+        }
+
+        function integratableMissionModuleAddOne() {
+            var text = $("#integratableMissionModuleBtn").val();
+            //取最后一位
+            var index = text.lastIndexOf(' ')
+            var size = text.substring(index+1);
+            //加1
+            var newSize = parseInt(size) + 1;
+            //删除最后一位
+            var text = text.substr(0, text.length - 1);
+            //新内容
+            var newText = text + newSize.toString();
+            //响应
+            $("#integratableMissionModuleBtn").val(newText);
+        }
+
+        function PreviewImage(imgFile) {
+            var filextension=imgFile.value.substring(imgFile.value.lastIndexOf("."),imgFile.value.length);
+            var f = document.getElementById("operableModuleControlCenter_tolDesign_uploadImg").files;
+            var filesize = ((f[0].size)/1024)/1024;
+            var filemaxsize = 1;//1M
+
+
+            filextension=filextension.toLowerCase();
+            if ((filextension!='.jpg')&&(filextension!='.gif')&&(filextension!='.jpeg')&&(filextension!='.png'))
+            {
+                document.getElementById("imgtip").innerHTML = "系统仅支持.jpg /.jpeg /.png /.gif类型的图片，请您调整格式后重新上传。";
+                imgFile.value = "";
+                $("#imgPreview").empty();
+            }
+            else
+            {
+                if(filesize>filemaxsize){
+                    document.getElementById("imgtip").innerHTML = "图片大小不能大于1MB";
+                    imgFile.value = "";
+                    $("#imgPreview").empty();
+                }
+                else {
+                    var path;
+                    if(document.all)//IE
+                    {
+                        imgFile.select();//要解决ie9 和 frame框架下的bug问题，需要找一个元素focus();
+                        path = document.selection.createRange().text;
+                        document.getElementById("imgPreview").innerHTML="";
+                        document.getElementById("imgPreview").style.filter = "progid:DXImageTransform.Microsoft.AlphaImageLoader(enabled='true',sizingMethod='scale',src=\"" + path + "\")";//使用滤镜效果
+                    }
+                    else//FF
+                    {
+                        path=window.URL.createObjectURL(imgFile.files[0]);// FF 7.0以上
+                        document.getElementById("imgPreview").innerHTML = "<img id='img1' width='120px' height='100px' src='"+path+"'/>";
+                    }
+                    document.getElementById("imgtip").innerHTML = "支持小于1MB的 jpg / jpeg / png / gif图片";
+                }
+            }
+        }
+
+        function PreviewImage_Det(imgFile) {
+            var filextension=imgFile.value.substring(imgFile.value.lastIndexOf("."),imgFile.value.length);
+            var f = document.getElementById("operableModuleControlCenter_DetDesign_uploadImg").files;
+            var filesize = ((f[0].size)/1024)/1024;
+            var filemaxsize = 1;//1M
+
+
+            filextension=filextension.toLowerCase();
+            if ((filextension!='.jpg')&&(filextension!='.gif')&&(filextension!='.jpeg')&&(filextension!='.png'))
+            {
+                document.getElementById("imgtip_det").innerHTML = "系统仅支持.jpg /.jpeg /.png /.gif类型的图片，请您调整格式后重新上传。";
+                imgFile.value = "";
+                $("#imgPreview_det").empty();
+            }
+            else
+            {
+                if(filesize>filemaxsize){
+                    document.getElementById("imgtip_det").innerHTML = "图片大小不能大于1MB";
+                    imgFile.value = "";
+                    $("#imgPreview_det").empty();
+                }
+                else {
+                    var path;
+                    if(document.all)//IE
+                    {
+                        imgFile.select();//要解决ie9 和 frame框架下的bug问题，需要找一个元素focus();
+                        path = document.selection.createRange().text;
+                        document.getElementById("imgPreview_det").innerHTML="";
+                        document.getElementById("imgPreview_det").style.filter = "progid:DXImageTransform.Microsoft.AlphaImageLoader(enabled='true',sizingMethod='scale',src=\"" + path + "\")";//使用滤镜效果
+                    }
+                    else//FF
+                    {
+                        path=window.URL.createObjectURL(imgFile.files[0]);// FF 7.0以上
+                        document.getElementById("imgPreview_det").innerHTML = "<img id='img1' width='120px' height='100px' src='"+path+"'/>";
+                    }
+                    document.getElementById("imgtip_det").innerHTML = "支持小于1MB的 jpg / jpeg / png / gif图片";
+                }
+            }
+        }
+
+        function selectComponent(moduleId,type) {
+            $("#selectedModuleDiv").attr("hidden",false);
+            $("#selectedModuleType").text(type);
+            $("#ViewDetails").attr("href","/mission/viewDetails?moduleId="+moduleId+"&type="+type);
+        }
+        
+        function treeShow(missionModuleId) {
+            $("#treeGraph").attr("src","/project/getNodeSonTreeGraph?missionModuleId="+missionModuleId);
+            $("#treeGraph").css("height","400px");
+            $("#frameBtn").show();
+        }
+
+        function treeHide() {
+            $("#treeGraph").attr("src","");
+            $("#treeGraph").css("height","0px");
+            $("#frameBtn").hide();
+        }
+        
+        function reflashFrame() {
+            //保存原路径
+            var src = $("#treeGraph")[0].src;
+            //清空原路径
+            $("#treeGraph").attr("src","");
+            //重新加载原路径
+            $("#treeGraph").attr("src",src);
+        }
+
+    </script>
+</head>
+<body>
+
+<!-- content wrapper start -->
+<div class="wrapper">
+    <div style="width: 100%;padding: 0 auto;top: 0;left: 0;z-index: 9999;">
+        <!--Tree-->
+        <div style="width: 960px;margin: 0 auto">
+            <iframe id="treeGraph" style="width: 100%;height: 0px"></iframe>
+            <br>
+            <input id="frameBtn" type="button" onclick="reflashFrame()" class="textbtn float-right" value="刷新树图" style="display: none">
+        </div>
+        <!--TreeEnd-->
+    </div>
+    <!-- main start -->
+    <div class="main-content"></div>
+    <div class="main" id="main">
+        <!-- main-content start -->
+        <div class="main-content">
+            项目编号：<label id="proId" th:text = "${project.id}"></label>
+            &nbsp;
+            项目名称：<label th:text = "${project.projectname}"></label>
+            &nbsp;
+            <label id="userId" hidden="hidden" th:text = "${projectMember.userid}"></label>
+            你的项目身份为：<label th:text = "${projectMember.roletype}"></label>
+            &nbsp;
+        </div>
+        <div class="main-content">
+            <input id="operableMissionModuleBtn" type="button" class="textbtn" th:value="'可操作模块 '+${operableMissionModuleList_size}" onclick="OperableModuleShow()">&nbsp;
+            <input id="initialMissionModuleBtn" type="button" class="textbtn" th:value="'初始模块 '+${initialMissionModuleList_size}" onclick="InitialModuleShow()">&nbsp;
+            <input id="publishedMissionModuleBtn" type="button" class="textbtn" th:value="'已发布模块 '+${publishedMissionModuleList_size}" onclick="PublishedModuleShow()">&nbsp;
+            <input id="integratableMissionModuleBtn" type="button" class="textbtn" th:value="'可集成模块 '+${integratableMissionModuleList_size}" onclick="IntegratableModuleShow()">&nbsp;
+            <input id="repairingMissionModuleBtn" type="button" class="textbtn" th:value="'待修复模块 '+${repairingMissionModuleList_size}" onclick="RepairModuleShow()">&nbsp;
+            <input id="finishedMissionModuleBtn" type="button" class="textbtn" th:value="'已完成模块 '+${finishedMissionModuleList_size}" onclick="FinishedModuleShow()">&nbsp;
+        </div>
+        <div class="main-content">
+            <!--可操作模块-->
+            <div class="main-box" id="OperableModule">
+                <th:block th:if = "${operableMissionModuleList_size} == 0 ">
+                    暂无可操作的模块。
+                </th:block>
+                <!--Table1 start-->
+                <table id="Table1" class="display">
+                    <thead>
+                    <tr>
+                        <th>模块ID</th>
+                        <th>模块名称</th>
+                        <th>模块类型</th>
+                        <th>模块索引</th>
+                        <th>发布时间</th>
+                        <th>发布者ID</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="o:${operableMissionModuleList}">
+                        <td th:text = "${o.id}"></td>
+                        <td th:text = "${o.mimoname}"></td>
+                        <td th:text = "${o.category}"></td>
+                        <td th:text = "${o.moduleindex}"></td>
+                        <td th:text = "${o.registertime}"></td>
+                        <td th:text = "${o.operatorid}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+                <!--Table1 end-->
+            </div>
+            <!--初始模块-->
+            <div class="main-box" id="InitialModule" hidden="hidden">
+                <th:block th:if = "${initialMissionModuleList_size} == 0 ">
+                    暂无未发布的模块。
+                </th:block>
+                <!--Table2 start-->
+                <table id="Table2" class="display">
+                    <thead>
+                    <tr>
+                        <th>模块ID</th>
+                        <th>模块名称</th>
+                        <th>模块类型</th>
+                        <th>模块索引</th>
+                        <th>模块声明</th>
+                        <th>注册时间</th>
+                        <th>操作者ID</th>
+                        <th>父模块索引</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="i:${initialMissionModuleList}">
+                        <td th:text = "${i.id}"></td>
+                        <td th:text = "${i.mimoname}"></td>
+                        <td th:text = "${i.category}"></td>
+                        <td th:text = "${i.moduleindex}"></td>
+                        <td th:text = "${i.statement}"></td>
+                        <td th:text = "${i.registertime}"></td>
+                        <td th:text = "${i.operatorid}"></td>
+                        <td th:text = "${i.fatherindex}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+                <!--Table2 end-->
+            </div>
+            <!--已发布模块-->
+            <div class="main-box" id="PublishedModule" hidden="hidden">
+                <th:block th:if = "${publishedMissionModuleList_size} == 0 ">
+                    暂无已发布的模块。
+                </th:block>
+                <!--Table3 start-->
+                <table id="Table3" class="display">
+                    <thead>
+                    <tr>
+                        <th>模块ID</th>
+                        <th>模块名称</th>
+                        <th>模块类型</th>
+                        <th>模块索引</th>
+                        <th>模块声明</th>
+                        <th>发布时间</th>
+                        <th>发布者ID</th>
+                        <th>接收者ID</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="p,pStat:${publishedMissionModuleList}">
+                        <td th:text = "${p.id}"></td>
+                        <td th:text = "${p.mimoname}"></td>
+                        <td th:text = "${p.category}"></td>
+                        <td th:text = "${p.moduleindex}"></td>
+                        <td th:text = "${p.statement}"></td>
+                        <td th:text = "${p.registertime}"></td>
+                        <td th:text = "${p.operatorid}"></td>
+                        <td th:text = "${publishedMissionList[pStat.index].receiverid}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+                <!--Table3 end-->
+            </div>
+            <!--可集成模块-->
+            <div class="main-box" id="IntegratableModule" hidden="hidden">
+                <th:block th:if = "${integratableMissionModuleList_size} == 0 ">
+                    暂无可集成的模块。
+                </th:block>
+                <!--Table6 start-->
+                <table id="Table6" class="display">
+                    <thead>
+                    <tr>
+                        <th>模块ID</th>
+                        <th>模块名称</th>
+                        <th>模块类型</th>
+                        <th>模块索引</th>
+                        <th>发布时间</th>
+                        <th>发布者ID</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="i:${integratableMissionModuleList}">
+                        <td th:text = "${i.id}"></td>
+                        <td th:text = "${i.mimoname}"></td>
+                        <td th:text = "${i.category}"></td>
+                        <td th:text = "${i.moduleindex}"></td>
+                        <td th:text = "${i.registertime}"></td>
+                        <td th:text = "${i.operatorid}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+                <!--Table6 end-->
+            </div>
+            <!--待修复模块-->
+            <div class="main-box" id="RepairingModule" hidden="hidden">
+                <th:block th:if = "${repairingMissionModuleList_size} == 0 ">
+                    暂无待修复的模块。
+                </th:block>
+                <!--Table4 start-->
+                <table id="Table4" class="display">
+                    <thead>
+                    <tr>
+                        <th>模块ID</th>
+                        <th>模块名称</th>
+                        <th>模块类型</th>
+                        <th>模块索引</th>
+                        <th>发布时间</th>
+                        <th>发布者ID</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="o:${repairingMissionModuleList}">
+                        <td th:text = "${o.id}"></td>
+                        <td th:text = "${o.mimoname}"></td>
+                        <td th:text = "${o.category}"></td>
+                        <td th:text = "${o.moduleindex}"></td>
+                        <td th:text = "${o.registertime}"></td>
+                        <td th:text = "${o.operatorid}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+                <!--Table4 end-->
+            </div>
+            <!--已完成模块-->
+            <div class="main-box" id="FinishedModule" hidden="hidden">
+                <th:block th:if = "${finishedMissionModuleList_size} == 0 ">
+                    暂无已完成的模块。
+                </th:block>
+                <!--Table5 start-->
+                <table id="Table5" class="display">
+                    <thead>
+                    <tr>
+                        <th>模块ID</th>
+                        <th>模块名称</th>
+                        <th>模块类型</th>
+                        <th>模块索引</th>
+                        <th>发布时间</th>
+                        <th>发布者ID</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    <tr th:each="p:${finishedMissionModuleList}">
+                        <td th:text = "${p.id}"></td>
+                        <td th:text = "${p.mimoname}"></td>
+                        <td th:text = "${p.category}"></td>
+                        <td th:text = "${p.moduleindex}"></td>
+                        <td th:text = "${p.registertime}"></td>
+                        <td th:text = "${p.operatorid}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+                <!--Table5 end-->
+            </div>
+        </div>
+        <!-- main-content end -->
+        <!-- main-sider start -->
+        <div class="main-sider">
+            <!--操作面板-->
+            <div class="sider-box">
+                <div class="sider-box-title">
+                    操作面板<div id="message"style="color: red"></div>
+                </div>
+                <div class="sider-box-title" id="selectedModuleDiv" hidden="hidden">
+                    所选模块类型：<label id="selectedModuleType"></label>&nbsp;<a style="color: deepskyblue" id="ViewDetails">查看详细信息</a>
+                </div>
+                <div id="operableModuleControlCenter">
+                    <div hidden="hidden" class="sider-box-content" id="operableModuleControlCenter_req">
+                        <label>可添加子模块类型:</label>
+                        <label id="operableModuleControlCenter_req_SonModuleType">需求</label><br>
+                        <label>需求名称</label><label style="color: red">*</label>
+                        <div><input id="operableModuleControlCenter_req_Name" type="text" placeholder="在此填写需求名称" required="required"></div>
+                        <label>业务需求</label><label style="color: red">*</label>
+                        <div><textarea id="operableModuleControlCenter_req_BusinessReq"></textarea></div>
+                        <label>用户需求</label><label style="color: red">*</label>
+                        <div><textarea id="operableModuleControlCenter_req_UserReq"></textarea></div>
+                        <label>功能需求</label><label style="color: red">*</label>
+                        <div><textarea id="operableModuleControlCenter_req_FunctionalReq"></textarea></div>
+                        <label>非功能性需求</label><label style="color: red">*</label>
+                        <div><textarea id="operableModuleControlCenter_req_NonFunctionalReq"></textarea></div>
+                        <input type="button" value="创建" class="textbtn" onclick="buildMissionModule()">
+                        <input type="button" value="完成编辑，进入待集成" class="textbtn" style="background-color: red" onclick="bigModuleEnterToIntegrateStatus()">
+                    </div>
+                    <div hidden="hidden" class="sider-box-content" id="operableModuleControlCenter_TolDesign">
+                        <label>可添加子模块类型:</label>
+                        <label id="operableModuleControlCenter_tolDesign_SonModuleType">总体设计</label><br>
+                        <label>总体设计名称</label><label style="color: red">*</label>
+                        <div><input id="operableModuleControlCenter_tolDesign_Name" type="text" placeholder="在此填写总体设计名称" required="required"></div>
+                        <label>功能描述</label><label style="color: red">*</label>
+                        <div><textarea id="operableModuleControlCenter_tolDesign_ProcessLogic"></textarea></div>
+                        <label>软件结构</label>
+                        <div>
+                            <input id="operableModuleControlCenter_tolDesign_uploadImg" type="file" onchange="PreviewImage(this)"/>
+                            <div id="imgPreview" style='width:120px; height:100px;'></div>
+                            <span id="imgtip" class="grey">支持小于1MB的 jpg / jpeg / png / gif图片</span><br>
+                        </div>
+                        <input type="button" value="创建" class="textbtn" onclick="buildMissionModule()">
+                        <input type="button" value="完成编辑，进入待集成" class="textbtn" style="background-color: red" onclick="bigModuleEnterToIntegrateStatus()">
+                    </div>
+                    <div hidden="hidden" class="sider-box-content" id="operableModuleControlCenter_DelDesign">
+                        <label>可添加子模块类型:</label>
+                        <label id="operableModuleControlCenter_DetDesign_SonModuleType">详细设计</label><br>
+                        <label>详细设计名称</label><label style="color: red">*</label>
+                        <div><input id="operableModuleControlCenter_DetDesign_DetName" type="text" placeholder="在此填写详细设计名称" required="required"></div>
+                        <label>流程逻辑</label>
+                        <div>
+                            <input id="operableModuleControlCenter_DetDesign_uploadImg" type="file" onchange="PreviewImage_Det(this)"/>
+                            <div id="imgPreview_det" style='width:120px; height:100px;'></div>
+                            <span id="imgtip_det" class="grey">支持小于1MB的 jpg / jpeg / png / gif图片</span><br>
+                        </div>
+                        <label>算法</label><label style="color: red">*</label>
+                        <div><textarea id="operableModuleControlCenter_DetDesign_Arithmetic"></textarea></div>
+                        <label>限制条件</label><label style="color: red">*</label>
+                        <div><textarea id="operableModuleControlCenter_DetDesign_LimitingCondition"></textarea></div>
+                        <label>输入</label><label style="color: red">*</label>
+                        <div><textarea id="operableModuleControlCenter_DetDesign_Input"></textarea></div>
+                        <label>输出</label><label style="color: red">*</label>
+                        <div><textarea id="operableModuleControlCenter_DetDesign_Output"></textarea></div>
+                        <input type="button" value="创建" class="textbtn" onclick="buildMissionModule()">
+                        <input type="button" value="完成编辑，进入待集成" class="textbtn" style="background-color: red" onclick="bigModuleEnterToIntegrateStatus()">
+                    </div>
+                    <div hidden="hidden" class="sider-box-content" id="operableModuleControlCenter_ProgramBlock">
+                        <div hidden="hidden" id="operableModuleControlCenter_ProgramBlock_Programmer">
+                            <input type="button" value="完成编码" class="textbtn" onclick="buildMissionModule()">
+                        </div>
+                        <div hidden="hidden" id="operableModuleControlCenter_ProgramBlock_Programmer_Repair">
+                            <label>缺陷修复方案描述</label>
+                            <div><textarea id="operableModuleControlCenter_ProgramBlock_Programmer_Repair_SolutionDescription"></textarea></div>
+                            <input type="button" value="完成修复" class="textbtn" onclick="repairTheDefect()">
+                        </div>
+                        <div hidden="hidden" id="operableModuleControlCenter_ProgramBlock_QA">
+                            <label>可添加子模块类型:</label>
+                            <label id="operableModuleControlCenter_Defect_SonModuleType">缺陷</label><br>
+                            <label>缺陷标题</label><label style="color: red">*</label>
+                            <div><input id="operableModuleControlCenter_Defect_Title" type="text" placeholder="在此填写缺陷标题" required="required"></div>
+                            <label>缺陷描述</label><label style="color: red">*</label>
+                            <div><textarea id="operableModuleControlCenter_Defect_Description"></textarea></div>
+                            <div>
+                                <label>严重程度</label><label style="color: red">*</label>
+                                <select id="operableModuleControlCenter_Defect_Severity">
+                                    <option value="0">细微</option>
+                                    <option value="1">一般</option>
+                                    <option value="2">严重</option>
+                                    <option value="3">致命</option>
+                                </select>
+                            </div>
+                            <input type="button" value="创建记录" class="textbtn" onclick="buildMissionModule()">
+                            <input type="button" value="完成测试" class="textbtn" onclick="completeTheTest()">
+                        </div>
+                        <div hidden="hidden" id="operableModuleControlCenter_ProgramBlock_QA_Retesting">
+                            <label>备注</label>
+                            <div><textarea id="operableModuleControlCenter_ProgramBlock_QA_Retesting_Note"></textarea></div>
+                            <input type="button" value="通过测试" class="textbtn" onclick="defectPassing()">
+                            <input type="button" value="问题未得到解决" class="textbtn" onclick="defectReject()">
+                        </div>
+                        <div hidden="hidden" id="operableModuleControlCenter_ProgramBlock_AssignMission">
+                            <label>模块编号</label>
+                            <div id="operableModuleControlCenter_ProgramBlock_AssignMission_id"></div>
+                            <label>模块名称</label>
+                            <div id="operableModuleControlCenter_ProgramBlock_AssignMission_name"></div>
+                            <label>模块类型</label>
+                            <div id="operableModuleControlCenter_ProgramBlock_AssignMission_category"></div>
+                            <label>模块索引</label>
+                            <div id="operableModuleControlCenter_ProgramBlock_AssignMission_index"></div>
+                            <label>任务可分配对象类型</label>
+                            <div id="operableModuleControlCenter_ProgramBlock_AssignMission_membertype"></div>
+                            <label id="operableModuleControlCenter_ProgramBlock_AssignMission_memberSelector_label">选择对象</label>
+                            <select id="operableModuleControlCenter_ProgramBlock_AssignMission_memberSelector"></select>
+                            <label hidden="hidden" id="operableModuleControlCenter_ProgramBlock_AssignMission_MissionStatus1">任务状态：</label>
+                            <label hidden="hidden" id="operableModuleControlCenter_ProgramBlock_AssignMission_MissionStatus2" style="color: red"></label>
+                            <br>
+                            <input id="operableModuleControlCenter_ProgramBlock_AssignMission_publishBtn" type="button" value="指派修复任务" class="textbtn" onclick="AssignMissionToPro()">
+                        </div>
+                    </div>
+                </div>
+                <div class="sider-box-content" id="initialModuleControlCenter" hidden="hidden">
+                    <div id="initialModuleControlCenter_content" hidden="hidden">
+                        <label>模块编号</label>
+                        <div id="initialModuleControlCenter_id"></div>
+                        <label>模块名称</label>
+                        <div id="initialModuleControlCenter_name"></div>
+                        <label>模块类型</label>
+                        <div id="initialModuleControlCenter_category"></div>
+                        <label>模块索引</label>
+                        <div id="initialModuleControlCenter_index"></div>
+                        <label>模块声明</label>
+                        <div id="initialModuleControlCenter_statement"></div>
+                        <label>任务可分配对象类型</label>
+                        <div id="initialModuleControlCenter_membertype"></div>
+                        <label>选择对象</label>
+                        <select id="initialModuleControlCenter_memberSelector"></select>
+                        <label hidden="hidden" id="initialModuleControlCenter_memberSelector_QA">自动匹配</label>
+                        <br>
+                        <input style="display:none" id="initialModuleControlCenter_publishBtn_QA" type="button" value="发布" class="textbtn" onclick="publishMission_QA()">
+                        <input style="display:none" id="initialModuleControlCenter_publishBtn_Pro_Defect" type="button" value="发布" class="textbtn" onclick="publishMission_Pro_Defect()">
+                        <input id="initialModuleControlCenter_publishBtn" type="button" value="发布" class="textbtn" onclick="publishMission()">
+                        <input id="initialModuleControlCenter_removeBtn" type="button" value="移除" class="textbtn" onclick="removeMissionModule()">
+                    </div>
+                </div>
+                <div class="sider-box-content" id="integratableModuleControlCenter" hidden="hidden">
+                    <div id="integratableModuleControlCenter_content" hidden="hidden">
+                        <label>模块编号</label>
+                        <div id="integratableModuleControlCenter_id"></div>
+                        <label>模块名称</label>
+                        <div id="integratableModuleControlCenter_name"></div>
+                        <label>模块类型</label>
+                        <div id="integratableModuleControlCenter_category"></div>
+                        <label>模块索引</label>
+                        <div id="integratableModuleControlCenter_index"></div>
+                        <label>发布时间</label>
+                        <div id="integratableModuleControlCenter_statement"></div>
+                        <label>任务可分配对象类型</label>
+                        <div id="integratableModuleControlCenter_membertype"></div>
+                        <label id="integratableModuleControlCenter_memberSelector_label">选择对象</label>
+                        <select id="integratableModuleControlCenter_memberSelector"></select>
+                        <label hidden="hidden" id="integratableModuleControlCenter_missionStatus1">任务状态:</label>
+                        <label hidden="hidden" id="integratableModuleControlCenter_missionStatus2" style="color: red"></label>
+                        <br>
+                        <input id="integratableModuleControlCenter_publishBtn" type="button" value="开始集成测试" class="textbtn" onclick="publishIngratableMission()">
+                    </div>
+                </div>
+
+            </div>
+        </div>
+        <!-- main-sider end -->
+        <div class="c"></div>
+        <a style="left: 842px; display: none;" rel="nofollow" href="#top" id="go-to-top">▲</a>
+
+    </div>
+    <!-- main end -->
+    <div class="c"></div>
+    <!-- footer start -->
+    <div class="copyright">
+        <p>
+
+        </p>
+    </div>
+    <!-- footer end -->
+</div>
+<!-- content wrapper end -->
+
+</body>
+</html>

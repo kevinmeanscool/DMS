@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="UTF-8">
+    <title>帮助文档</title>
+    <link href="/CSS/style.css" rel="stylesheet" type="text/css">
+    <script type="text/javascript" src="../JS/jquery-3.3.1.min.js"></script>
+    <script type="text/javascript" src="../JS/wangEditor.min.js"></script>
+</head>
+<body>
+<div class="wrapper">
+    <div class="nav-bar">
+        <div class="nav-panel">
+            <div class="inner-nav-panel">
+                <div class="logo">
+                    <a href="/toHomePage">
+                        <img src="/images/logo.png">
+                    </a>
+                </div>
+
+                <div class="buttons">
+                    <div style="padding: 0;width: 200px;float: left;">
+                        <img style="width: 200px;height: 40px;" src="/images/logo2.png">
+                    </div>
+                    <th:block th:if = "${session.userInfo != null}">
+                        <a th:href="@{/user/logout(username=${session.userInfo.username})}" class="buttons-active">退出登陆</a>
+                        <a href="/user/toPersonalCenter" class="buttons-active">个人中心</a>
+                        <th:block th:if = "${session.userInfo.identity != '0'}">
+                            <a href="/toBackManage" class="buttons-active">后台管理</a>
+                        </th:block>
+                        <a href="/toHelpDocument" class="buttons-active">帮助文档</a>
+                        <a href="/toManageProject" class="buttons-active">项目管理</a>
+                        <a href="/toHomePage" class="buttons-active">首页</a>
+                    </th:block>
+
+                    <th:block th:if = "${session.userInfo == null}">
+                        <a href="/toHomePage" class="buttons-active">首页</a>
+                        <a href="/user/toRegister" class="buttons-active">现在注册</a>
+                        <a href="/user/toLogin" class="buttons-active">登陆</a>
+                        <a href="/DMSInfo/toSystemSetting" class="buttons-active">系统设置</a>
+                    </th:block>
+                </div>
+                <div class="c"></div>
+            </div>
+        </div>
+    </div>
+    <!-- main start -->
+    <div class="main-content"></div>
+    <div class="main" id="main">
+        <!-- main-content start -->
+        <div class="main-content">
+            <form action="/article/publishArticle" method="post">
+                <div class="main-box">
+                    <label hidden="hidden" id="id" th:text = "${article.id}"/>
+                    <h1 id="title" th:text = "${article.title}"></h1>
+                </div>
+                <div class="main-box">
+                    <div id="content" th:utext = "${article.content}">
+                        <!--content-->
+                    </div>
+                </div>
+                <p></p>
+            </form>
+        </div>
+        <!-- main-content end -->
+        <!-- main-sider start -->
+        <div class="main-sider">
+            <!--用户面板-->
+            <th:block th:if = "${session.userInfo != null}">
+                <div class="sider-box">
+                    <div class="sider-box-title">
+                        用户面板
+                        <span class="float-right"><a th:href="@{/user/logout(username=${session.userInfo.username})}">登出</a></span>
+                    </div>
+                    <div class="sider-box-content">
+                        <div class="user-pannel-avatar">
+                            <a href="">
+                                <img id="imgHead" th:src = "@{${session.userInfo.imageurl}}" th:alt = "@{${session.userInfo.imageurl}}">
+                            </a>
+                        </div>
+                        <div class="user-pannel">
+                            <div class="user-pannel-name">
+                                <a th:text = "${session.userInfo.nickname}" href=""></a>
+                            </div>
+                        </div>
+                        <div class="c"></div>
+                    </div>
+                </div>
+            </th:block>
+            <th:block th:if = "${session.userInfo == null}">
+                <div class="sider-box">
+                    <div class="sider-box-title"> 登 录 </div>
+                    <div class="sider-box-content">
+                        <div class="center-align" style="width:226px;">
+                            <form action="/user/login" method="post" onsubmit="return validate();">
+                                <p><label id="validationtip"></label></p>
+                                <p><label><input name="username"  type="text" required="required" class="w200" placeholder="用户名" onkeyup="value=value.replace(/[\W]/g,'')"></label></p>
+                                <p><label><input name="password" type="password" required="required" class="w200" placeholder="密码" onkeyup="value=value.replace(/[\W]/g,'')"></label></p>
+                                <p><label><input id = "validatorcode" type="password" required="required" style="width: 130px" placeholder="验证码"><input style="background: lightgray;color: white;margin-top: 5px;margin-left: 15px" type = "button" id="code" onclick="createCode()"/></label></p>
+                                <p><input type="submit" class="textbtn" name="submit" value="登 录" style="margin:0 78px;"></p>
+                                <p class="fs14 text-center">
+                                    <a href="/user/toRegister">现在注册</a>&nbsp;&nbsp;&nbsp;&nbsp;
+                                    <a href="/JSP/forgetpassword.jsp">忘记密码</a>
+                                </p>
+                            </form>
+                        </div>
+                        <p>
+                        </p>
+                    </div>
+                </div>
+            </th:block>
+
+        </div>
+        <!-- main-sider end -->
+        <div class="c"></div>
+        <a style="left: 842px; display: none;" rel="nofollow" href="#top" id="go-to-top">▲</a>
+
+    </div>
+    <!-- main end -->
+</div>
+
+</body>
+</html>
